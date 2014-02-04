@@ -40,6 +40,8 @@ fixed removed the warnings.
 
 \subsection{Eliminating ``negative array index'' warnings}
 
+These cases were all very similar, and were related to the two fields (row, number) of the Seat class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (Seat.MIN\_ROW, MAX\_ROW; Seat.MIN\_NUMBER, MAX\_NUMBER). This required two other changes - we made gave invariants to both row and number, and preconditions to their setters. We also made the indexToNumber() and indexToRow() functions into helpers.
+
 \subsection{Eliminating ``index too large'' warnings}
 
 \subsection{Eliminating ``array element subtyping'' warnings}
