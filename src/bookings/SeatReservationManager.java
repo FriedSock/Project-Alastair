@@ -2,6 +2,8 @@ package bookings;
 
 public class SeatReservationManager {
 
+    /*@ non_null */
+    /*@ invariant \nonnullelements(seatReservations) */
     private final Customer[][] seatReservations;
 
     public SeatReservationManager() {
@@ -9,12 +11,12 @@ public class SeatReservationManager {
                                        [numberToIndex(Seat.MAX_NUMBER) + 1];
     }
 
-    public boolean isReserved(Seat s) {
+    public boolean isReserved(/*@ non_null */ Seat s) {
         return seatReservations[rowToIndex(s.getRow())]
                                [numberToIndex(s.getNumber())] != null;
     }
 
-    public void reserve(Seat s, Customer c)
+    public void reserve(/*@ non_null */ Seat s, Customer c)
             throws ReservationException {
         if(isReserved(s)) {
             throw new ReservationException();
@@ -23,7 +25,7 @@ public class SeatReservationManager {
                         [numberToIndex(s.getNumber())] = c;
     }
 
-    public void unreserve(Seat s)
+    public void unreserve(/*@ non_null */ Seat s)
             throws ReservationException {
         if(!isReserved(s)) {
             throw new ReservationException();
