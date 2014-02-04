@@ -18,6 +18,24 @@ Not sure we need an introduction
 
 \subsection{Eliminating ``null'' warnings}
 
+One of the interesting things about this bit is the order of comment annotations.
+
+initially we tried:
+
+\begin{verbatim}
+  /* invariant \nonnullelements(seatReservations)
+  /*@ non_null */
+  private final Customer[][] seatReservations;
+\end{verbatim}
+
+This actually created 2 warnings regarding assigning null to fields of seatReservations. It seems that the
+\verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
+\begin{verbatim}
+  /*@ non_null */
+  /* invariant \nonnullelements(seatReservations)
+\end{verbatim}
+fixed removed the warnings.
+
 \subsection{Eliminating ``negative length'' warnings}
 
 \subsection{Eliminating ``negative array index'' warnings}
