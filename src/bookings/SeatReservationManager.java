@@ -91,11 +91,11 @@ public class SeatReservationManager {
         return number - Seat.MIN_NUMBER;
     }
 
-    private static char indexToRow(int index) {
+    private /*@ helper */ static char indexToRow(int index) {
         return (char)(Seat.MIN_ROW + index);
     }
 
-    private static int indexToNumber(int index) {
+    private /*@ helper */ static int indexToNumber(int index) {
         return index + Seat.MIN_NUMBER;
     }
 
