@@ -99,6 +99,7 @@ public class SeatReservationManager {
         return (char)(Seat.MIN_ROW + index);
     }
 
+    //@ pure
     private /*@ helper */ static int indexToNumber(int index) {
         return index + Seat.MIN_NUMBER;
     }
