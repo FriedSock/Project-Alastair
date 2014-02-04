@@ -9,7 +9,7 @@ public class Seat {
 
     private final char row;
     private final int number;
-    
+
     public Seat(char row, int number) {
         this.row = row;
         this.number = number;

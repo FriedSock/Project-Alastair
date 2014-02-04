@@ -3,7 +3,7 @@ package bookings;
 public class SeatReservationManager {
 
     private final Customer[][] seatReservations;
-    
+
     public SeatReservationManager() {
         seatReservations = new Customer[rowToIndex(Seat.MAX_ROW) + 1]
                                        [numberToIndex(Seat.MAX_NUMBER) + 1];
@@ -14,7 +14,7 @@ public class SeatReservationManager {
                                [numberToIndex(s.getNumber())] != null;
     }
 
-    public void reserve(Seat s, Customer c) 
+    public void reserve(Seat s, Customer c)
             throws ReservationException {
         if(isReserved(s)) {
             throw new ReservationException();
@@ -22,7 +22,7 @@ public class SeatReservationManager {
         seatReservations[rowToIndex(s.getRow())]
                         [numberToIndex(s.getNumber())] = c;
     }
-    
+
     public void unreserve(Seat s)
             throws ReservationException {
         if(!isReserved(s)) {
@@ -34,10 +34,10 @@ public class SeatReservationManager {
 
     public void reserveNextFree(Customer c) throws ReservationException {
         for(int rowIndex = 0; rowIndex < seatReservations.length; rowIndex++) {
-            for(int numberIndex = 0; 
-                    numberIndex < seatReservations[rowIndex].length; 
+            for(int numberIndex = 0;
+                    numberIndex < seatReservations[rowIndex].length;
                     numberIndex++) {
-                Seat current = new Seat(indexToRow(rowIndex), 
+                Seat current = new Seat(indexToRow(rowIndex),
                     indexToNumber(numberIndex));
                 if(!isReserved(current)) {
                     reserve(current, c);
@@ -47,16 +47,16 @@ public class SeatReservationManager {
         }
         throw new ReservationException();
     }
-    
+
     /*@ ghost String toStringResult; in privateState;
         represents theString <- toStringResult;
     @*/
- 
+
     public String toString() {
 
         String result = " ";
-        
-        for(int numberIndex = 0; numberIndex < seatReservations[0].length; 
+
+        for(int numberIndex = 0; numberIndex < seatReservations[0].length;
                 numberIndex++) {
             result += " " + indexToNumber(numberIndex);
         }
@@ -66,17 +66,17 @@ public class SeatReservationManager {
             rowIndex < seatReservations.length;
             rowIndex++) {
             result += indexToRow(rowIndex);
-            for(int numberIndex = 0; numberIndex < 
+            for(int numberIndex = 0; numberIndex <
                     seatReservations[rowIndex].length; numberIndex++) {
                 for(int j = numberIndex; j >= 10; j /= 10) {
                     result += " ";
                 }
-                result += " " + (isReserved(new Seat(indexToRow(rowIndex), 
+                result += " " + (isReserved(new Seat(indexToRow(rowIndex),
                     indexToNumber(numberIndex))) ? "X" : " ");
             }
             result += "\n";
         }
-        
+
         //@ set toStringResult = result;
         return result;
     }
@@ -88,7 +88,7 @@ public class SeatReservationManager {
     private static int numberToIndex(int number) {
         return number - Seat.MIN_NUMBER;
     }
-    
+
     private static char indexToRow(int index) {
         return (char)(Seat.MIN_ROW + index);
     }
@@ -96,5 +96,5 @@ public class SeatReservationManager {
     private static int indexToNumber(int index) {
         return index + Seat.MIN_NUMBER;
     }
-    
+
 }
