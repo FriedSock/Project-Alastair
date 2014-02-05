@@ -49,7 +49,7 @@ There were only 2 warnings about negative length, both very similar. One of thes
 11:                                 [numberToIndex(Seat.MAX_NUMBER) + 1];
 \end{verbatim}
 
-We solved this by annotating\verb|rowToIndex| and\verb|number ToIndex| as helper functions. This causes ESC/Java to inline the function body, essentially translating the 2 above lines into:
+We solved this by annotating \verb|rowToIndex| and \verb|number ToIndex| as helper functions. This causes ESC/Java to inline the function body, essentially translating the 2 above lines into:
 
 \noindent
 \begin{verbatim}
@@ -57,18 +57,18 @@ We solved this by annotating\verb|rowToIndex| and\verb|number ToIndex| as helper
 11:                                 [(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1];
 \end{verbatim}
 
-Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and
+Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and \\
 \verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn out to be positive numbers. So the warning disappears.
 
 There were no knock-on effects caused by adding the new annotations.
 
 \subsection{Eliminating ``negative array index'' warnings}
 
-These cases were all very similar, and were related to the two fields (verb|row| and\verb|number|) of the\verb|Seat| class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\verb|Seat.MIN_ROW|, \verb|MAX_ROW|; \verb|Seat.MIN_NUMBER|, \verb|MAX_NUMBER|). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the\verb|indexToNumber| and\verb|indexToRow| functions into helpers.
+These cases were all very similar, and were related to the two fields (\verb|row| and \verb|number|) of the\verb|Seat| class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\verb|Seat.MIN_ROW| to \verb|MAX_ROW| and \verb|Seat.MIN_NUMBER| to \verb|MAX_NUMBER|). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the \verb|indexToNumber| and \verb|indexToRow| functions into helpers.
 
 \subsection{Eliminating ``index too large'' warnings}
 
-Warnings of this type were eliminated by adding object invariants to the\verb|SeatReservationManager| class for the\verb|seatReservations| array. We had to make sure that the first dimension of the array stays within bounds set by \verb|Seat.MIN_ROW| and \verb|Seat.MAX_ROW|. We achieved this by adding the following invariant:
+Warnings of this type were eliminated by adding object invariants to the \verb|SeatReservationManager| class for the \verb|seatReservations| array. We had to make sure that the first dimension of the array stays within bounds set by \verb|Seat.MIN_ROW| and \verb|Seat.MAX_ROW|. We achieved this by adding the following invariant:
 
 \noindent
 \begin{verbatim}
@@ -85,14 +85,14 @@ Then, we had to make sure all the arrays within the outer array (second dimensio
 The most interesting case where a warning was reported in this case was a following line in the \verb|toString| method of \verb|SeatReservationManager|:
 
 \begin{verbatim}
-    for(int numberIndex = 0; numberIndex < seatReservations[0].length;
+for(int numberIndex = 0; numberIndex < seatReservations[0].length;
 \end{verbatim}
 
 Here, ESC/Java complained about the index 0 when accessing \verb|seatReservations|. Clearly, 0 is not a number which is too big but in case the array was empty it would be an index which is too large.
 
 \subsection{Eliminating ``array element subtyping'' warnings}
 
-At the beginning we found these warnings quite confusing. SeatReservationManager had a field (verb|seatReservations|) which was an array of\verb|Customer|. A warning was being generated when an instance of\verb|Customer| was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of\verb|Customer|, then inserting either an instance of\verb|Customer| or some other subclass would be wrong.
+At the beginning we found these warnings quite confusing. SeatReservationManager had a field (verb|seatReservations|) which was an array of \verb|Customer|. A warning was being generated when an instance of \verb|Customer| was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of \verb|Customer|, then inserting either an instance of \verb|Customer| or some other subclass would be wrong.
 
 Once we knew what the potential problem was, we fixed it by extending our object invariant with a forall clause to look like this:
 
@@ -103,7 +103,7 @@ Once we knew what the potential problem was, we fixed it by extending our object
                    && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
 \end{verbatim}
 
-Here we are making sure that all the elements in the\verb|seatReservations| array are of type Customer.
+Here we are making sure that all the elements in the \verb|seatReservations| array are of type Customer.
 
 What we tried originally was to do something like this:
 
@@ -115,11 +115,11 @@ An object invariant like this one did however not work. We had to use a forall c
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
-The\verb|toString| method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about\verb|indexToNumber|, so we marked the method as pure (which means that the method doesn't modify any instance variables). After this simple change, the Modifies warning stopped appearing. We are not entirely sure why this works though, since the method is also marked as a helper which means it should be inlined. This would imply that it does not need to be marked as pure for this to work.
+The \verb|toString| method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about \verb|indexToNumber|, so we marked the method as pure (which means that the method doesn't modify any instance variables). After this simple change, the Modifies warning stopped appearing. We are not entirely sure why this works though, since the method is also marked as a helper which means it should be inlined. This would imply that it does not need to be marked as pure for this to work.
 
 \subsection{Helper methods}
 
-We marked the last four methods in the\verb|SeatReservationManager| class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause'' error, as explained above.
+We marked the last four methods in the \verb|SeatReservationManager| class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause'' error, as explained above.
 
 \section{Daikon}
 
