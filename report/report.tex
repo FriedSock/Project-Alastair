@@ -102,4 +102,23 @@ TODO: `knock-on effects' of our changes
 
 \section{Daikon}
 
+\subsection{First run}
+
+After the first run of Daikon when we had a simple main method with just 4 reservations Daikon suggested a lot of invariants. Quite a few of them were spurious like these:
+
+\begin{verbatim}
+    bookings.SeatReservationManager.reserve(bookings.Seat, bookings.Customer):::ENTER
+    this.seatReservations[bookings.Seat.MIN_NUMBER] has only one value
+    this.seatReservations[bookings.Seat.MIN_NUMBER-1] has only one value
+\end{verbatim}
+
+or these:
+
+\begin{verbatim}
+    bookings.SeatReservationManager.isReserved(bookings.Seat):::EXIT
+    return == false
+\end{verbatim}
+
+Clearly, these invariants do not hold in general. They are only a result of a very simple main method which does not call too many methods in the codebase with various parameters. For example, if we added more bookings to the same row or tried booking a seat which is already booked we would not get any of the above invariants.
+
 \end{document}
