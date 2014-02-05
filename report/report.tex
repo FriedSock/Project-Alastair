@@ -26,7 +26,7 @@ One of the most interesting things we came across when eliminating ``null'' warn
   private final Customer[][] seatReservations;
 \end{verbatim}
 
-However, this actually created 2 warnings regarding assigning null to fields of seatReservations. It seems that the \verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
+However, this actually created 2 warnings regarding assigning null to fields of \verb{seatReservations}. It seems that the \verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
 
 \begin{verbatim}
   /*@ non_null */
@@ -34,6 +34,8 @@ However, this actually created 2 warnings regarding assigning null to fields of 
 \end{verbatim}
 
 removed the warnings.
+
+There were no knock-on effects caused by adding the new annotations.
 
 \subsection{Eliminating ``negative length'' warnings}
 
