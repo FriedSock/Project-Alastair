@@ -27,7 +27,7 @@ One of the most interesting things we came across when eliminating ``null'' warn
 private final Customer[][] seatReservations;
 \end{verbatim}
 
-However, this actually created 2 warnings regarding assigning null to fields of seatReservations. It seems that the \verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
+However, this actually created 2 warnings regarding assigning null to fields of \verb{seatReservations}. It seems that the \verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
 
 \noindent
 \begin{verbatim}
@@ -36,6 +36,8 @@ However, this actually created 2 warnings regarding assigning null to fields of 
 \end{verbatim}
 
 removed the warnings.
+
+There were no knock-on effects caused by adding the new annotations.
 
 \subsection{Eliminating ``negative length'' warnings}
 
@@ -58,6 +60,8 @@ We solved this by annotating\verb|rowToIndex| and\verb|number ToIndex| as helper
 Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and
 \verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn out to be positive numbers. So the warning disappears.
 
+There were no knock-on effects caused by adding the new annotations.
+
 \subsection{Eliminating ``negative array index'' warnings}
 
 These cases were all very similar, and were related to the two fields (verb|row| and\verb|number|) of the\verb|Seat| class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\verb|Seat.MIN_ROW|, \verb|MAX_ROW|; \verb|Seat.MIN_NUMBER|, \verb|MAX_NUMBER|). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the\verb|indexToNumber| and\verb|indexToRow| functions into helpers.
@@ -78,7 +82,13 @@ Then, we had to make sure all the arrays within the outer array (second dimensio
 /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1 ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
 \end{verbatim}
 
-TODO: interesting case
+The most interesting case where a warning was reported in this case was a following line in the \verb{toString} method of \verb{SeatReservationManager}:
+
+\begin{verbatim}
+    for(int numberIndex = 0; numberIndex < seatReservations[0].length;
+\end{verbatim}
+
+Here, ESC/Java complained about the index 0 when accessing \verb{seatReservations}. Clearly, 0 is not a number which is too big but in case the array was empty it would be an index which is too large.
 
 \subsection{Eliminating ``array element subtyping'' warnings}
 
@@ -94,7 +104,14 @@ Once we knew what the potential problem was, we fixed it by extending our object
 \end{verbatim}
 
 Here we are making sure that all the elements in the\verb|seatReservations| array are of type Customer.
-TODO: talk about the other things we tried that didn't work?
+
+What we tried originally was to do something like this:
+
+\begin{verbatim}
+\elemtype(\elemtype(\typeof(seatReservations))) == \type(Customer)
+\end{verbatim}
+
+An object invariant like this one did however not work. We had to use a forall construct.
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
@@ -140,5 +157,7 @@ arg0.row > size(this.seatReservations[])
 \end{verbatim}
 
 We could have spent more time on this, and eventually eliminated all warnings that weren't strictly true (for example, for the first of the above warnings we would need two different `test cases'; one where \verb|row < number| (to invalidate \verb|row >= number|), and one where \verb|row == number| (to invalidate \verb|row != number|)). Writing multiple tests to remove invariants that should not even appear in correct executions seems like a very high cost for very small benefit. Therefore, we have cut back our testing to a certain degree, finding relevant edge cases for methods without worrying about the meaningless comparisons.
+
+Some of the negative testing was also violating preconditions for certain methods, and this assisted in our decision not to include these tests. We thought it would be more harmful to see precondition violations when running ESC/Java than to see spurious invariants when running Daikon.
 
 \end{document}
