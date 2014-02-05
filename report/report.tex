@@ -57,7 +57,7 @@ out to be positive numbers. So the warning disappears.
 
 \subsection{Eliminating ``negative array index'' warnings}
 
-These cases were all very similar, and were related to the two fields (row, number) of the Seat class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (Seat.MIN\_ROW, MAX\_ROW; Seat.MIN\_NUMBER, MAX\_NUMBER). This required two other changes - we made gave invariants to both row and number, and preconditions to their setters. We also made the indexToNumber() and indexToRow() functions into helpers.
+These cases were all very similar, and were related to the two fields (row, number) of the Seat class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (Seat.MIN\_ROW, MAX\_ROW; Seat.MIN\_NUMBER, MAX\_NUMBER). This required two other changes - we made gave invariants to both row and number, and preconditions to their setters. We also made the \emph{indexToNumber} and \emph{indexToRow} functions into helpers.
 
 \subsection{Eliminating ``index too large'' warnings}
 
@@ -84,6 +84,10 @@ Once we knew what the potential problem is we -- this is wrong
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
 The \emph{toString} method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about \emph{indexToNumber} so we marked the method as pure. This means that the method doesn't modify any instance variables. After this simple change the Modifies warning stopped appearing. We are not entirely sure why this works though as the method is also marked as a helper which means it should be inlined. That would imply that it does not need to be marked as pure for this to work.
+
+\subsection{Helper methods}
+
+We marked the last four methods in the \emph{SeatReservationManager} class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause" error, as explained above.
 
 \section{Daikon}
 
