@@ -34,30 +34,5 @@ public class SeatReservationDemo {
             manager.reserve(new Seat('G', 20), new Customer());
         } catch (ReservationException e) {
         }
-
-        // Try booking a non-existent seat
-        try {
-            manager.reserve(new Seat('A', -100), new Customer());
-        } catch (ArrayIndexOutOfBoundsException e) {
-        }
-
-        // Try booking a non-existent seat
-        try {
-            manager.reserve(new Seat('A', 100), new Customer());
-        } catch (ArrayIndexOutOfBoundsException e) {
-        }
-
-        // Try booking a non-existent seat
-        try {
-            manager.reserve(new Seat((char) 0, 1), new Customer());
-        } catch (ArrayIndexOutOfBoundsException e) {
-        }
-
-        // Try booking a non-existent seat
-        try {
-            manager.reserve(new Seat('Z', 1), new Customer());
-        } catch (ArrayIndexOutOfBoundsException e) {
-        }
     }
-
 }
