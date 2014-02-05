@@ -18,9 +18,7 @@ Not sure we need an introduction
 
 \subsection{Eliminating ``null'' warnings}
 
-One of the interesting things about this bit is the order of comment annotations.
-
-initially we tried:
+One of the most interesting things we came across when eliminating ``null'' warnings about is the order of comment annotations. Initially we tried:
 
 \begin{verbatim}
   /* invariant \nonnullelements(seatReservations)
@@ -28,40 +26,42 @@ initially we tried:
   private final Customer[][] seatReservations;
 \end{verbatim}
 
-This actually created 2 warnings regarding assigning null to fields of seatReservations. It seems that the
-\verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
+However, this actually created 2 warnings regarding assigning null to fields of seatReservations. It seems that the \verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
+
 \begin{verbatim}
   /*@ non_null */
   /* invariant \nonnullelements(seatReservations)
 \end{verbatim}
-fixed removed the warnings.
+
+removed the warnings.
 
 \subsection{Eliminating ``negative length'' warnings}
 
-There were only 2 warnings about negative length.
+There were only 2 warnings about negative length, both very similar. One of these was:
 
 \begin{verbatim}
   10:  seatReservations = new Customer[rowToIndex(Seat.MAX_ROW) + 1]
   11:                                 [numberToIndex(Seat.MAX_NUMBER) + 1];
 \end{verbatim}
 
-This was solved by annotating rowToIndex and numberToIndex as helper functions. ESC Java
-will inline the function body, essentially translating the 2 above lines into:
+We solved this by annotating rowToIndex and numberToIndex as helper functions. This causes ESC/Java to inline the function body, essentially translating the 2 above lines into:
+
 \begin{verbatim}
   10:  seatReservations = new Customer[(Seat.MAX_ROW - Seat.MIN_ROW) + 1]
   11:                                 [(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1];
 \end{verbatim}
 
-Suprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and \verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn
-out to be positive numbers. So the warning disappears.
+Unsuprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and \verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn out to be positive numbers. So the warning disappears.
 
 \subsection{Eliminating ``negative array index'' warnings}
 
-These cases were all very similar, and were related to the two fields (row, number) of the Seat class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (Seat.MIN\_ROW, MAX\_ROW; Seat.MIN\_NUMBER, MAX\_NUMBER). This required two other changes - we made gave invariants to both row and number, and preconditions to their setters. We also made the \emph{indexToNumber} and \emph{indexToRow} functions into helpers.
+These cases were all very similar, and were related to the two fields (\emph{row} and \emph{number}) of the \emph{Seat} class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\emph{Seat.MIN\_ROW}, \emph{MAX\_ROW}; \emph{Seat.MIN\_NUMBER}, \emph{MAX\_NUMBER}). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the \emph{indexToNumber} and \emph{indexToRow} functions into helpers.
+
+TODO: more detail?
 
 \subsection{Eliminating ``index too large'' warnings}
 
-Warnings of this type were eliminated by adding object invariants to the SeatReservationManager class for the seatReservations array. We had to make sure that the first dimension of the array stays within bounds set by \emph{Seat.MIN\_ROW) and \emph{Seat.MAX\_ROW}. We achieved this by adding the following invariant:
+Warnings of this type were eliminated by adding object invariants to the \emph{SeatReservationManager} class for the \emph{seatReservations} array. We had to make sure that the first dimension of the array stays within bounds set by \emph{Seat.MIN\_ROW) and \emph{Seat.MAX\_ROW}. We achieved this by adding the following invariant:
 
 \begin{verbatim}
     /*@ invariant seatReservations.length == Seat.MAX_ROW - Seat.MIN_ROW + 1 */
@@ -77,9 +77,9 @@ TODO: interesting case
 
 \subsection{Eliminating ``array element subtyping'' warnings}
 
-At the beginning we found these warnings quite confusing. SeatReservationManager had a field (\emph{seatReservations}) which was an array of \emph{Customer}. A warning was being generated when an instance of \emph{Customer} was inserted into the array. This didn't make much sense. We however realised that if the array was initialised as an array of some class which is a subclass of \emph{Customer} then inserting either an instance of \emph{Customer} or some other subclass would be wrong.
+At the beginning we found these warnings quite confusing. SeatReservationManager had a field (\emph{seatReservations}) which was an array of \emph{Customer}. A warning was being generated when an instance of \emph{Customer} was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of \emph{Customer}, then inserting either an instance of \emph{Customer} or some other subclass would be wrong.
 
-Once we knew what the potential problem is we fixed it by extending our object invariant with a forall clause to look like this:
+Once we knew what the potential problem was, we fixed it by extending our object invariant with a forall clause to look like this:
 
 \begin{verbatim}
     /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1
@@ -87,15 +87,18 @@ Once we knew what the potential problem is we fixed it by extending our object i
                        && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
 \end{verbatim}
 
-Now, we are making sure that all the elements in the \emph{seatReservations} array are of type Customer.
+Here we are making sure that all the elements in the \emph{seatReservations} array are of type Customer.
+TODO: talk about the other things we tried that didn't work?
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
-The \emph{toString} method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about \emph{indexToNumber} so we marked the method as pure. This means that the method doesn't modify any instance variables. After this simple change the Modifies warning stopped appearing. We are not entirely sure why this works though as the method is also marked as a helper which means it should be inlined. That would imply that it does not need to be marked as pure for this to work.
+The \emph{toString} method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about \emph{indexToNumber}, so we marked the method as pure (which means that the method doesn't modify any instance variables). After this simple change, the Modifies warning stopped appearing. We are not entirely sure why this works though, since the method is also marked as a helper which means it should be inlined. This would imply that it does not need to be marked as pure for this to work.
 
 \subsection{Helper methods}
 
-We marked the last four methods in the \emph{SeatReservationManager} class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause" error, as explained above.
+We marked the last four methods in the \emph{SeatReservationManager} class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause'' error, as explained above.
+
+TODO: `knock-on effects' of our changes
 
 \section{Daikon}
 
