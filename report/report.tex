@@ -79,7 +79,15 @@ TODO: interesting case
 
 At the beginning we found these warnings quite confusing. SeatReservationManager had a field (\emph{seatReservations}) which was an array of \emph{Customer}. A warning was being generated when an instance of \emph{Customer} was inserted into the array. This didn't make much sense. We however realised that if the array was initialised as an array of some class which is a subclass of \emph{Customer} then inserting either an instance of \emph{Customer} or some other subclass would be wrong.
 
-Once we knew what the potential problem is we -- this is wrong
+Once we knew what the potential problem is we fixed it by extending our object invariant with a forall clause to look like this:
+
+\begin{verbatim}
+    /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1
+                   ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1
+                       && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
+\end{verbatim}
+
+Now, we are making sure that all the elements in the \emph{seatReservations} array are of type Customer.
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
