@@ -61,6 +61,20 @@ These cases were all very similar, and were related to the two fields (row, numb
 
 \subsection{Eliminating ``index too large'' warnings}
 
+Warnings of this type were eliminated by adding object invariants to the SeatReservationManager class for the seatReservations array. We had to make sure that the first dimension of the array stays within bounds set by \emph{Seat.MIN\_ROW) and \emph{Seat.MAX\_ROW}. We achieved this by adding the following invariant:
+
+\begin{verbatim}
+    /*@ invariant seatReservations.length == Seat.MAX_ROW - Seat.MIN_ROW + 1 */
+\end{verbatim}
+
+Then, we had to make sure all the arrays within the outer array (second dimension) have a length as calculated from \emph{Seat.MIN\_NUMBER} and \emph{Seat.MAX\_NUMBER}. This involved adding a more elaborate object invariant using forall:
+
+\begin{verbatim}
+    /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1 ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
+\end{verbatim}
+
+TODO: interesting case
+
 \subsection{Eliminating ``array element subtyping'' warnings}
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
