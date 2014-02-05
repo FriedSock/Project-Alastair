@@ -71,7 +71,13 @@ Then, we had to make sure all the arrays within the outer array (second dimensio
     /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1 ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
 \end{verbatim}
 
-TODO: interesting case
+The most interesting case where a warning was reported in this case was a following line in the \verb{toString} method of \verb{SeatReservationManager}:
+
+\begin{verbatim}
+    for(int numberIndex = 0; numberIndex < seatReservations[0].length;
+\end{verbatim}
+
+Here, ESC/Java complained about the index 0 when accessing \verb{seatReservations}. Clearly, 0 is not a number which is too big but in case the array was empty it would be an index which is too large.
 
 \subsection{Eliminating ``array element subtyping'' warnings}
 
