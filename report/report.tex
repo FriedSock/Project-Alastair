@@ -143,4 +143,6 @@ Initially, we tried to completely remove all spurious invariants, but this prove
 
 We could have spent more time on this, and eventually eliminated all warnings that weren't strictly true (for example, for the first of the above warnings we would need two different `test cases'; one where \emph{row} < \emph{number} (to invalidate \emph{row} >= \emph{number}), and one where \emph{row} == \emph{number} (to invalidate \emph{row} != \emph{number})). Writing multiple tests to remove invariants that should not even appear in correct executions seems like a very high cost for very small benefit. Therefore, we have cut back our testing to a certain degree, finding relevant edge cases for methods without worrying about the meaningless comparisons.
 
+Some of the negative testing was also violating preconditions for certain methods, and this assisted in our decision not to include these tests. We thought it would be more harmful to see precondition violations when running ESC/Java than to see spurious invariants when running Daikon.
+
 \end{document}
