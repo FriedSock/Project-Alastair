@@ -92,7 +92,14 @@ Once we knew what the potential problem was, we fixed it by extending our object
 \end{verbatim}
 
 Here we are making sure that all the elements in the \emph{seatReservations} array are of type Customer.
-TODO: talk about the other things we tried that didn't work?
+
+What we tried originally was to do something like this:
+
+\begin{verbatim}
+    \elemtype(\elemtype(\typeof(seatReservations))) == \type(Customer)
+\end{verbatim}
+
+An object invariant like this one did however not work. We had to use a forall construct.
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
