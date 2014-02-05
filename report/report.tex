@@ -5,14 +5,11 @@
 \date{}
 
 \usepackage{float}
+\usepackage[margin=1.5in]{geometry}
 
 \begin{document}
 
 \maketitle
-
-\section{Introduction}
-
-Not sure we need an introduction
 
 \section{ESC/Java}
 
@@ -68,7 +65,8 @@ These cases were all very similar, and were related to the two fields (\verb|row
 
 \subsection{Eliminating ``index too large'' warnings}
 
-Warnings of this type were eliminated by adding object invariants to the \verb|SeatReservationManager| class for the \verb|seatReservations| array. We had to make sure that the first dimension of the array stays within bounds set by \verb|Seat.MIN_ROW| and \verb|Seat.MAX_ROW|. We achieved this by adding the following invariant:
+Warnings of this type were eliminated by adding object invariants to the \\
+\verb|SeatReservationManager| class for the \verb|seatReservations| array. We had to make sure that the first dimension of the array stays within bounds set by \verb|Seat.MIN_ROW| and \verb|Seat.MAX_ROW|. We achieved this by adding the following invariant:
 
 \noindent
 \begin{verbatim}
@@ -79,7 +77,9 @@ Then, we had to make sure all the arrays within the outer array (second dimensio
 
 \noindent
 \begin{verbatim}
-/*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1 ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
+/*@ invariant (\forall int x;
+    x >= 0 && x <= seatReservations.length - 1
+      ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
 \end{verbatim}
 
 The most interesting case where a warning was reported in this case was a following line in the \verb|toString| method of \verb|SeatReservationManager|:
@@ -92,15 +92,16 @@ Here, ESC/Java complained about the index 0 when accessing \verb|seatReservation
 
 \subsection{Eliminating ``array element subtyping'' warnings}
 
-At the beginning we found these warnings quite confusing. SeatReservationManager had a field (verb|seatReservations|) which was an array of \verb|Customer|. A warning was being generated when an instance of \verb|Customer| was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of \verb|Customer|, then inserting either an instance of \verb|Customer| or some other subclass would be wrong.
+At the beginning we found these warnings quite confusing. SeatReservationManager had a field (\verb|seatReservations|) which was an array of \verb|Customer|. A warning was being generated when an instance of \verb|Customer| was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of \verb|Customer|, then inserting either an instance of \verb|Customer| or some other subclass would be wrong.
 
 Once we knew what the potential problem was, we fixed it by extending our object invariant with a forall clause to look like this:
 
 \noindent
 \begin{verbatim}
-/*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1
-               ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1
-                   && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
+/*@ invariant (\forall int x;
+    x >= 0 && x <= seatReservations.length - 1
+      ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1
+        && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
 \end{verbatim}
 
 Here we are making sure that all the elements in the \verb|seatReservations| array are of type Customer.
