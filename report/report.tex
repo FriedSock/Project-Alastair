@@ -20,17 +20,19 @@ Not sure we need an introduction
 
 One of the most interesting things we came across when eliminating ``null'' warnings about is the order of comment annotations. Initially we tried:
 
+\noindent
 \begin{verbatim}
-  /* invariant \nonnullelements(seatReservations)
-  /*@ non_null */
-  private final Customer[][] seatReservations;
+/* invariant \nonnullelements(seatReservations)
+/*@ non_null */
+private final Customer[][] seatReservations;
 \end{verbatim}
 
 However, this actually created 2 warnings regarding assigning null to fields of seatReservations. It seems that the \verb|non_null| comment annotation overwrote the invariant annotation. Switching the order to:
 
+\noindent
 \begin{verbatim}
-  /*@ non_null */
-  /* invariant \nonnullelements(seatReservations)
+/*@ non_null */
+/* invariant \nonnullelements(seatReservations)
 \end{verbatim}
 
 removed the warnings.
@@ -39,62 +41,68 @@ removed the warnings.
 
 There were only 2 warnings about negative length, both very similar. One of these was:
 
+\noindent
 \begin{verbatim}
-  10:  seatReservations = new Customer[rowToIndex(Seat.MAX_ROW) + 1]
-  11:                                 [numberToIndex(Seat.MAX_NUMBER) + 1];
+10:  seatReservations = new Customer[rowToIndex(Seat.MAX_ROW) + 1]
+11:                                 [numberToIndex(Seat.MAX_NUMBER) + 1];
 \end{verbatim}
 
-We solved this by annotating \emph{rowToIndex} and \emph{numberToIndex} as helper functions. This causes ESC/Java to inline the function body, essentially translating the 2 above lines into:
+We solved this by annotating\verb|rowToIndex| and\verb|number ToIndex| as helper functions. This causes ESC/Java to inline the function body, essentially translating the 2 above lines into:
 
+\noindent
 \begin{verbatim}
-  10:  seatReservations = new Customer[(Seat.MAX_ROW - Seat.MIN_ROW) + 1]
-  11:                                 [(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1];
+10:  seatReservations = new Customer[(Seat.MAX_ROW - Seat.MIN_ROW) + 1]
+11:                                 [(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1];
 \end{verbatim}
 
-Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and \verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn out to be positive numbers. So the warning disappears.
+Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and
+\verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn out to be positive numbers. So the warning disappears.
 
 \subsection{Eliminating ``negative array index'' warnings}
 
-These cases were all very similar, and were related to the two fields (\emph{row} and \emph{number}) of the \emph{Seat} class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\emph{Seat.MIN\_ROW}, \emph{MAX\_ROW}; \emph{Seat.MIN\_NUMBER}, \emph{MAX\_NUMBER}). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the \emph{indexToNumber} and \emph{indexToRow} functions into helpers.
+These cases were all very similar, and were related to the two fields (verb|row| and\verb|number|) of the\verb|Seat| class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\verb|Seat.MIN_ROW|, \verb|MAX_ROW|; \verb|Seat.MIN_NUMBER|, \verb|MAX_NUMBER|). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the\verb|indexToNumber| and\verb|indexToRow| functions into helpers.
 
 \subsection{Eliminating ``index too large'' warnings}
 
-Warnings of this type were eliminated by adding object invariants to the \emph{SeatReservationManager} class for the \emph{seatReservations} array. We had to make sure that the first dimension of the array stays within bounds set by \emph{Seat.MIN\_ROW) and \emph{Seat.MAX\_ROW}. We achieved this by adding the following invariant:
+Warnings of this type were eliminated by adding object invariants to the\verb|SeatReservationManager| class for the\verb|seatReservations| array. We had to make sure that the first dimension of the array stays within bounds set by \verb|Seat.MIN_ROW| and \verb|Seat.MAX_ROW|. We achieved this by adding the following invariant:
 
+\noindent
 \begin{verbatim}
-    /*@ invariant seatReservations.length == Seat.MAX_ROW - Seat.MIN_ROW + 1 */
+/*@ invariant seatReservations.length == Seat.MAX_ROW - Seat.MIN_ROW + 1 */
 \end{verbatim}
 
-Then, we had to make sure all the arrays within the outer array (second dimension) have a length as calculated from \emph{Seat.MIN\_NUMBER} and \emph{Seat.MAX\_NUMBER}. This involved adding a more elaborate object invariant using forall:
+Then, we had to make sure all the arrays within the outer array (second dimension) have a length as calculated from \verb|Seat.MIN_NUMBER| and \verb|Seat.MAX_NUMBER|. This involved adding a more elaborate object invariant using forall:
 
+\noindent
 \begin{verbatim}
-    /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1 ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
+/*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1 ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1) */
 \end{verbatim}
 
 TODO: interesting case
 
 \subsection{Eliminating ``array element subtyping'' warnings}
 
-At the beginning we found these warnings quite confusing. SeatReservationManager had a field (\emph{seatReservations}) which was an array of \emph{Customer}. A warning was being generated when an instance of \emph{Customer} was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of \emph{Customer}, then inserting either an instance of \emph{Customer} or some other subclass would be wrong.
+At the beginning we found these warnings quite confusing. SeatReservationManager had a field (verb|seatReservations|) which was an array of\verb|Customer|. A warning was being generated when an instance of\verb|Customer| was inserted into the array. This didn't make much sense until we realised that if the array was initialised as an array of some class which is a subclass of\verb|Customer|, then inserting either an instance of\verb|Customer| or some other subclass would be wrong.
 
 Once we knew what the potential problem was, we fixed it by extending our object invariant with a forall clause to look like this:
 
+\noindent
 \begin{verbatim}
-    /*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1
-                   ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1
-                       && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
+/*@ invariant (\forall int x; x >= 0 && x <= seatReservations.length - 1
+               ==> seatReservations[x].length == Seat.MAX_NUMBER - Seat.MIN_NUMBER + 1
+                   && \elemtype(\typeof(seatReservations[x])) == \type(Customer)) */
 \end{verbatim}
 
-Here we are making sure that all the elements in the \emph{seatReservations} array are of type Customer.
+Here we are making sure that all the elements in the\verb|seatReservations| array are of type Customer.
 TODO: talk about the other things we tried that didn't work?
 
 \subsection{Eliminating ``violation of modifies clause'' warnings}
 
-The \emph{toString} method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about \emph{indexToNumber}, so we marked the method as pure (which means that the method doesn't modify any instance variables). After this simple change, the Modifies warning stopped appearing. We are not entirely sure why this works though, since the method is also marked as a helper which means it should be inlined. This would imply that it does not need to be marked as pure for this to work.
+The\verb|toString| method calls a few other methods in the class but none of them modifies any state. ESC/Java was complaining about\verb|indexToNumber|, so we marked the method as pure (which means that the method doesn't modify any instance variables). After this simple change, the Modifies warning stopped appearing. We are not entirely sure why this works though, since the method is also marked as a helper which means it should be inlined. This would imply that it does not need to be marked as pure for this to work.
 
 \subsection{Helper methods}
 
-We marked the last four methods in the \emph{SeatReservationManager} class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause'' error, as explained above.
+We marked the last four methods in the\verb|SeatReservationManager| class as helper methods, as they were almost perfect examples of helper methods. They were private to the class, and had very short (one-line) method bodies, which made the cost of inlining the code negligible. Marking these methods as helpers also significantly reduced the number of warnings generated, though it did cause us to spend some extra time puzzling over the ``violation of modifies clause'' error, as explained above.
 
 TODO: `knock-on effects' of our changes
 
@@ -104,30 +112,33 @@ TODO: `knock-on effects' of our changes
 
 After the first run of Daikon when we had a simple main method with just 4 reservations Daikon suggested a lot of invariants. Quite a few of them were spurious like this one:
 
+\noindent
 \begin{verbatim}
-    bookings.SeatReservationManager.reserve(bookings.Seat, bookings.Customer):::EXIT
-    arg0.row one of { 65, 68, 70 }
+bookings.SeatReservationManager.reserve(bookings.Seat, bookings.Customer):::EXIT
+arg0.row one of { 65, 68, 70 }
 \end{verbatim}
 
 Or this one:
 
+\noindent
 \begin{verbatim}
-    bookings.SeatReservationManager.isReserved(bookings.Seat):::EXIT
-    return == false
+bookings.SeatReservationManager.isReserved(bookings.Seat):::EXIT
+return == false
 \end{verbatim}
 
 Clearly, these invariants do not hold in general. They are only a result of a very simple main method which does not call too many methods in the codebase with a lot of different values as their parameters. For example, if we added more bookings to the same row or booked a seat in a row currently not used by the main method we would not get any of the above invariants.
 
 \subsection{Reducing spurious invariants}
 
-Initially, we tried to completely remove all spurious invariants, but this proved challenging. After extensive negative testing to remove the invariants comparing \emph{Seat.row} to \emph{Seat.number}, we were still getting invariants such as these:
+Initially, we tried to completely remove all spurious invariants, but this proved challenging. After extensive negative testing to remove the invariants comparing \verb|Seat.row| to \verb|Seat.number|, we were still getting invariants such as these:
 
+\noindent
 \begin{verbatim}
-    bookings.SeatReservationManager.isReserved(bookings.Seat):::ENTER
-    arg0.row > arg0.number
-    arg0.row > size(this.seatReservations[])
+bookings.SeatReservationManager.isReserved(bookings.Seat):::ENTER
+arg0.row > arg0.number
+arg0.row > size(this.seatReservations[])
 \end{verbatim}
 
-We could have spent more time on this, and eventually eliminated all warnings that weren't strictly true (for example, for the first of the above warnings we would need two different `test cases'; one where \emph{row} < \emph{number} (to invalidate \emph{row} >= \emph{number}), and one where \emph{row} == \emph{number} (to invalidate \emph{row} != \emph{number})). Writing multiple tests to remove invariants that should not even appear in correct executions seems like a very high cost for very small benefit. Therefore, we have cut back our testing to a certain degree, finding relevant edge cases for methods without worrying about the meaningless comparisons.
+We could have spent more time on this, and eventually eliminated all warnings that weren't strictly true (for example, for the first of the above warnings we would need two different `test cases'; one where \verb|row < number| (to invalidate \verb|row >= number|), and one where \verb|row == number| (to invalidate \verb|row != number|)). Writing multiple tests to remove invariants that should not even appear in correct executions seems like a very high cost for very small benefit. Therefore, we have cut back our testing to a certain degree, finding relevant edge cases for methods without worrying about the meaningless comparisons.
 
 \end{document}
