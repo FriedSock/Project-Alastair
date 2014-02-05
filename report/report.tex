@@ -55,6 +55,8 @@ We solved this by annotating \emph{rowToIndex} and \emph{numberToIndex} as helpe
 
 Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and \verb|(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1| turn out to be positive numbers. So the warning disappears.
 
+There were no knock-on effects caused by adding the new annotations.
+
 \subsection{Eliminating ``negative array index'' warnings}
 
 These cases were all very similar, and were related to the two fields (\emph{row} and \emph{number}) of the \emph{Seat} class. To solve them, we first gave the getters post-conditions that ensured their values were in an acceptable range (\emph{Seat.MIN\_ROW}, \emph{MAX\_ROW}; \emph{Seat.MIN\_NUMBER}, \emph{MAX\_NUMBER}). This required two other changes - we created invariants for both fields, and preconditions to their setters. We also made the \emph{indexToNumber} and \emph{indexToRow} functions into helpers.
