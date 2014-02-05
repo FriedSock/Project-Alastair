@@ -45,16 +45,16 @@ There were only 2 warnings about negative length, both very similar. One of thes
 
 \noindent
 \begin{verbatim}
-10:  seatReservations = new Customer[rowToIndex(Seat.MAX_ROW) + 1]
-11:                                 [numberToIndex(Seat.MAX_NUMBER) + 1];
+seatReservations = new Customer[rowToIndex(Seat.MAX_ROW) + 1]
+                               [numberToIndex(Seat.MAX_NUMBER) + 1];
 \end{verbatim}
 
 We solved this by annotating \verb|rowToIndex| and \verb|number ToIndex| as helper functions. This causes ESC/Java to inline the function body, essentially translating the 2 above lines into:
 
 \noindent
 \begin{verbatim}
-10:  seatReservations = new Customer[(Seat.MAX_ROW - Seat.MIN_ROW) + 1]
-11:                                 [(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1];
+seatReservations = new Customer[(Seat.MAX_ROW - Seat.MIN_ROW) + 1]
+                               [(Seat.MAX_NUMBER - Seat.MIN_NUMBER) + 1];
 \end{verbatim}
 
 Unsurprisingly, \verb|(Seat.MAX_ROW - Seat.MIN_ROW) + 1| and \\
