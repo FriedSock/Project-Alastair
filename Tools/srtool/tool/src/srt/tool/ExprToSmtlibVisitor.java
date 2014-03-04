@@ -32,37 +32,53 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = "(bvxor %s %s)";
 				break;
 			case BinaryExpr.DIVIDE:
-				operator = "(bvxor %s %s)";
-
+				operator = "(bvudiv %s %s)";
 				break;
 			case BinaryExpr.LSHIFT:
+				operator = "(bvshl %s %s)"; 
 				break;
 			case BinaryExpr.MOD:
 				break;
 			case BinaryExpr.MULTIPLY:
 				break;
 			case BinaryExpr.RSHIFT:
+				operator = "(bvshr %s %s)"; 
 				break;
 			case BinaryExpr.SUBTRACT:
 				break;
-				
+	
 			case BinaryExpr.LAND:
+				operator = "(and (tobool %s) (%s tobool))";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.LOR:
+				operator = "(or (tobool %s) (tobool %s))";
+				operator = "(tobv32 " + operator + ")";
 				break;
-			
+				
 			case BinaryExpr.GEQ:
+				operator = "(not (bvult %s %s))";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.GT:
+				operator = "(and (not (bvult %1$s %2$s)) (not (= %1$s %2$s)))";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.LEQ:
+				operator = "(or (bvult %1$s %2$s) (= %1$s %2$s))";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.LT:
+				operator = "(bvult %s %s)";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.NEQUAL:
+				operator = "(not (= %s %s))";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.EQUAL:
 				operator = "(= %s %s)";
+				operator = "(tobv32 " + operator + ")";
 				break;
 			default:
 				throw new IllegalArgumentException("Invalid binary operator");
