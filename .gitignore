@@ -1,3 +1,5 @@
 report/report.aux
 report/report.log
 report/report.pdf
+Tools/srtool/tool/bin/*
+Tools/srtool/tool/.metadata
