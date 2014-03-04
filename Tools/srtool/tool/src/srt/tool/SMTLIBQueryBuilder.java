@@ -34,16 +34,22 @@ public class SMTLIBQueryBuilder {
 		}
 		
 		StringBuilder closingBrackets = new StringBuilder();
-		query.append("(assert \n");
+		StringBuilder finalAssertion = new StringBuilder();
+		StringBuilder propList = new StringBuilder();
+		finalAssertion.append("(assert \n");
+		int i = 0;
 		for (AssertStmt asrtStmt : constraints.propertyNodes) {
 			String expr = exprToSmt.visit(asrtStmt.getCondition());
-			query.append("(or (not (tobool " + expr + "))\n");
+			query.append("(define-fun prop" + i + " () Bool (not (tobool " + expr + ")))\n");
+			finalAssertion.append("(or prop" + i + "\n");
+			propList.append(" prop" + i++);
 			closingBrackets.append(")");
 		}
-		query.append(closingBrackets.toString() + ")\n");
-
+		finalAssertion.append(closingBrackets.toString() + ")\n");
+		query.append(finalAssertion);
 
 		query.append("(check-sat)\n");
+		query.append("(get-value (" + propList + "))\n\n");
 		queryString = query.toString();
 	}
 
