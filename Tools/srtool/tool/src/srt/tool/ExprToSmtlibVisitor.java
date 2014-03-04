@@ -32,19 +32,23 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = "(bvxor %s %s)";
 				break;
 			case BinaryExpr.DIVIDE:
-				operator = "(bvudiv %s %s)";
+				operator = "(bvsdiv %s %s)";
 				break;
 			case BinaryExpr.LSHIFT:
 				operator = "(bvshl %s %s)"; 
 				break;
 			case BinaryExpr.MOD:
+				operator = "(bvsmod %s %s)";
 				break;
 			case BinaryExpr.MULTIPLY:
+				operator = "(bvmul %s %s)";
 				break;
 			case BinaryExpr.RSHIFT:
-				operator = "(bvshr %s %s)"; 
+				//TODO: test that this preserves sign.
+				operator = "(bvashr %s %s)"; 
 				break;
 			case BinaryExpr.SUBTRACT:
+				operator = "(bvsub %s %s)";
 				break;
 	
 			case BinaryExpr.LAND:
@@ -57,19 +61,19 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				break;
 				
 			case BinaryExpr.GEQ:
-				operator = "(not (bvult %s %s))";
+				operator = "(bvsge %s %s)";
 				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.GT:
-				operator = "(and (not (bvult %1$s %2$s)) (not (= %1$s %2$s)))";
+				operator = "(bvsgt %s %s)";
 				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.LEQ:
-				operator = "(or (bvult %1$s %2$s) (= %1$s %2$s))";
+				operator = "(bvsle %s %s)";
 				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.LT:
-				operator = "(bvult %s %s)";
+				operator = "(bvslt %s %s)";
 				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.NEQUAL:
@@ -115,7 +119,7 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 			operator = "%s";
 			break;
 		case UnaryExpr.LNOT:
-			//TODO
+			operator = "(not (tobool %s))";
 			break;
 		case UnaryExpr.BNOT:
 			operator = "(bvnot %s)";
