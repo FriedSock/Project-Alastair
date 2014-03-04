@@ -23,12 +23,17 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				operator = "(bvadd %s %s)";
 				break;
 			case BinaryExpr.BAND:
+				operator = "(bvand %s %s)";
 				break;
 			case BinaryExpr.BOR:
+				operator = "(bvor %s %s)";
 				break;
 			case BinaryExpr.BXOR:
+				operator = "(bvxor %s %s)";
 				break;
 			case BinaryExpr.DIVIDE:
+				operator = "(bvxor %s %s)";
+
 				break;
 			case BinaryExpr.LSHIFT:
 				break;
@@ -91,10 +96,13 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 			operator = "(bvneg %s)";
 			break;
 		case UnaryExpr.UPLUS:
+			operator = "%s";
 			break;
 		case UnaryExpr.LNOT:
+			//TODO
 			break;
 		case UnaryExpr.BNOT:
+			operator = "(bvnot %s)";
 			break;
 		default:
 			throw new IllegalArgumentException("Invalid binary operator");

@@ -32,10 +32,14 @@ public class SMTLIBQueryBuilder {
 			query.append("(assert (= " + name + " " + rhs + "))\n");
 		}
 		
+		StringBuilder closingBrackets = new StringBuilder();
+		query.append("(assert \n");
 		for (AssertStmt asrtStmt : constraints.propertyNodes) {
 			String expr = exprToSmt.visit(asrtStmt.getCondition());
-			query.append("(assert (not " + expr + "))\n");
+			query.append("(or (not " + expr + ")\n");
+			closingBrackets.append(")");
 		}
+		query.append(closingBrackets.toString() + ")\n");
 
 
 		query.append("(check-sat)\n");
