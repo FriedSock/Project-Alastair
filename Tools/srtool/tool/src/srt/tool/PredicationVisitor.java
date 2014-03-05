@@ -28,11 +28,13 @@ public class PredicationVisitor extends DefaultVisitor {
 	
 	private int noPredicates = 0;
 	private int noHavocs = 0;
+	private int noGlobals = 0;
 	private Stack<Expr> nestedConds = new Stack<>();
+	private boolean firstAssignment = true;
 
 	public PredicationVisitor() {
 		super(true);
-		nestedConds.push(new DeclRef("$G"));
+		nestedConds.push(new DeclRef("$G0"));
 	}
 	
 	@Override
@@ -57,7 +59,9 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssignStmt assignment) {
-		if (assignment.getLhs().getName().equals("$G")) {
+		//We do not want to predicate the initial assignment of the Global predicate.
+		if (firstAssignment) {
+			firstAssignment = false;
 			return assignment;
 		}
 		Expr newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), assignment.getLhs());
@@ -67,9 +71,13 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssumeStmt assumeStmt) {
-		Expr assumeExpr = new BinaryExpr(BinaryExpr.LAND, new DeclRef("$G"), assumeStmt.getCondition());
-		Stmt assignment = new AssignStmt(new DeclRef("$G"), assumeExpr);
-		return super.visit(assignment);
+		String oldGlobal = "$G" + noGlobals;
+		Expr assumeExpr = new BinaryExpr(BinaryExpr.LAND, new DeclRef(oldGlobal), assumeStmt.getCondition());
+		Stmt assignment = (Stmt) super.visit(new AssignStmt(new DeclRef("$G"+(noGlobals+1)), assumeExpr));
+
+		noGlobals++;
+		nestedConds.set(0, new DeclRef("$G" + noGlobals));
+		return assignment;
 	}
 
 	@Override
@@ -89,8 +97,8 @@ public class PredicationVisitor extends DefaultVisitor {
 	@Override
 	public Object visit(Program program) {
 		BlockStmt block = program.getBlockStmt();
-		Decl declaration = new Decl("$G", "int");
-		Stmt assignment = new AssignStmt(new DeclRef("$G"), new IntLiteral(1));
+		Decl declaration = new Decl("$G0", "int");
+		Stmt assignment = new AssignStmt(new DeclRef("$G0"), new IntLiteral(1));
 		List<Stmt> statementList = Arrays.asList(new Stmt[]{declaration, assignment});
 		List<Stmt> newStatementList = new ArrayList<>();
 		newStatementList.addAll(statementList);

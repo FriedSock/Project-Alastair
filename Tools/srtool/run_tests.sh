@@ -9,19 +9,19 @@ ONLY_REPORT_FAILURES=0
 
 # Loop-free tests (should work with all modes)
 
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc -unsound
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode verifier
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode houdini
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode invgen
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc -unsound
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode verifier
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode houdini
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode invgen
 # Uncomment if you implement comp
 #tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode comp
 
 # BMC sound tests
-#tester/tester_run.sh tests/bmc_sound $ONLY_REPORT_FAILURES -mode bmc
+tester/tester_run.sh tests/bmc_sound $ONLY_REPORT_FAILURES -mode bmc
 
 # BMC unsound tests
-#tester/tester_run.sh tests/bmc_unsound $ONLY_REPORT_FAILURES -mode bmc -unsound
+tester/tester_run.sh tests/bmc_unsound $ONLY_REPORT_FAILURES -mode bmc -unsound
 
 # Houdini tests
 #tester/tester_run.sh tests/houdini $ONLY_REPORT_FAILURES -mode houdini

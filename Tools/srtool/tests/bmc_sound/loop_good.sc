@@ -9,8 +9,8 @@ void main()
 	{
 		i = i + 1;
 	}
-	
+
 	assert(i == 2);
-	
+
 }
 
