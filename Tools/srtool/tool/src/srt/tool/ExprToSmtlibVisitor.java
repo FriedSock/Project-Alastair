@@ -52,7 +52,7 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 				break;
 	
 			case BinaryExpr.LAND:
-				operator = "(and (tobool %s) (%s tobool))";
+				operator = "(and (tobool %s) (tobool %s))";
 				operator = "(tobv32 " + operator + ")";
 				break;
 			case BinaryExpr.LOR:

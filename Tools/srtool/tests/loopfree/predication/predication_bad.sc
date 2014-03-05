@@ -5,6 +5,6 @@ void main(int i,	int j, int z)
 	{
 	 z = 5;
 	}
-	
+
 	assert(z == 5);
 }

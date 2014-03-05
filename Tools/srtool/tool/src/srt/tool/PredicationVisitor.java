@@ -1,6 +1,9 @@
 package srt.tool;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Stack;
 
 import srt.ast.AssertStmt;
@@ -13,6 +16,8 @@ import srt.ast.DeclRef;
 import srt.ast.Expr;
 import srt.ast.HavocStmt;
 import srt.ast.IfStmt;
+import srt.ast.IntLiteral;
+import srt.ast.Program;
 import srt.ast.Stmt;
 import srt.ast.StmtList;
 import srt.ast.TernaryExpr;
@@ -22,10 +27,12 @@ import srt.ast.visitor.impl.DefaultVisitor;
 public class PredicationVisitor extends DefaultVisitor {
 	
 	private int noPredicates = 0;
+	private int noHavocs = 0;
 	private Stack<Expr> nestedConds = new Stack<>();
 
 	public PredicationVisitor() {
 		super(true);
+		nestedConds.push(new DeclRef("$G"));
 	}
 	
 	@Override
@@ -41,10 +48,6 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssertStmt assertStmt) {
-		if (nestedConds.isEmpty()) {
-			return super.visit(assertStmt);
-		}
-		
 		Expr lhs = nestedConds.peek(); 
 		UnaryExpr rhs = new UnaryExpr(UnaryExpr.LNOT, assertStmt.getCondition());
 		Expr expr = new UnaryExpr(UnaryExpr.LNOT, new BinaryExpr(BinaryExpr.LAND, lhs, rhs));
@@ -54,10 +57,9 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssignStmt assignment) {
-		if (nestedConds.isEmpty()) {
-			return super.visit(assignment);
+		if (assignment.getLhs().getName().equals("$G")) {
+			return assignment;
 		}
-		
 		Expr newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), assignment.getLhs());
 		Stmt newAssign = new AssignStmt(assignment.getLhs(), newRHS); 
 		return newAssign;
@@ -65,13 +67,40 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssumeStmt assumeStmt) {
-		return super.visit(assumeStmt);
+		Expr assumeExpr = new BinaryExpr(BinaryExpr.LAND, new DeclRef("$G"), assumeStmt.getCondition());
+		Stmt assignment = new AssignStmt(new DeclRef("$G"), assumeExpr);
+		return super.visit(assignment);
 	}
 
 	@Override
 	public Object visit(HavocStmt havocStmt) {
-		return super.visit(havocStmt);
+		String havocId = "h$" + noHavocs++;
+		Decl declaration = new Decl(havocId, "int");
+		Expr rhs = new TernaryExpr(nestedConds.peek(), new DeclRef(havocId), havocStmt.getVariable());
+		Stmt assignStmt = new AssignStmt(havocStmt.getVariable(), rhs);
+		
+		List<Stmt> statementList = new ArrayList<>();
+		statementList.add(declaration);
+		statementList.add(assignStmt);
+		BlockStmt block = new BlockStmt(statementList);
+		return super.visit(block);
 	}
+	
+	@Override
+	public Object visit(Program program) {
+		BlockStmt block = program.getBlockStmt();
+		Decl declaration = new Decl("$G", "int");
+		Stmt assignment = new AssignStmt(new DeclRef("$G"), new IntLiteral(1));
+		List<Stmt> statementList = Arrays.asList(new Stmt[]{declaration, assignment});
+		List<Stmt> newStatementList = new ArrayList<>();
+		newStatementList.addAll(statementList);
+		newStatementList.addAll(block.getStmtList().getStatements());
+
+		BlockStmt newBlock = new BlockStmt(newStatementList);
+		Program newProgram = new Program(program.getFunctionName(), program.getDeclList(), newBlock, program.getNodeInfo());
+		return super.visit(newProgram);
+	}
+	
 	
 	private Stmt handleBranch(Expr condition, Stmt body) {
 		String name = "$P" + noPredicates++;
