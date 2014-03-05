@@ -38,13 +38,12 @@ public class SRToolImpl implements SRTool {
 		// Collect the constraint expressions and variable names.
 		CollectConstraintsVisitor ccv = new CollectConstraintsVisitor();
 		ccv.visit(program);
-
-		// TODO: Convert constraints to SMTLIB String.
+		
 		SMTLIBQueryBuilder builder = new SMTLIBQueryBuilder(ccv);
 		builder.buildQuery();
-
+		
 		String smtQuery = builder.getQuery();
-
+		
 		// Output the query for debugging
 		if (clArgs.verbose) {
 			System.out.println(smtQuery);
