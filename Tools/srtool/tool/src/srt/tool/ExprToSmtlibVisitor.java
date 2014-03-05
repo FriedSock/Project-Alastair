@@ -104,7 +104,10 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 
 	@Override
 	public String visit(TernaryExpr ternaryExpr) {
-		return null;
+		String cond = visit(ternaryExpr.getCondition());
+		String thenBranch = visit(ternaryExpr.getTrueExpr());
+		String elseBranch = visit(ternaryExpr.getFalseExpr());
+		return "(ite (tobool " + cond + ") " + thenBranch + " " + elseBranch + ")";
 	}
 
 	@Override
@@ -119,7 +122,7 @@ public class ExprToSmtlibVisitor extends DefaultVisitor {
 			operator = "%s";
 			break;
 		case UnaryExpr.LNOT:
-			operator = "(not (tobool %s))";
+			operator = "(tobv32 (not (tobool %s)))";
 			break;
 		case UnaryExpr.BNOT:
 			operator = "(bvnot %s)";
