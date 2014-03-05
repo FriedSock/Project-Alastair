@@ -39,8 +39,10 @@ public class SSAVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssignStmt assignment) {
-		//TODO
 		DeclRef lhs = assignment.getLhs();
+		if (lhs.getName().contains("$")) {
+			return super.visit(assignment);
+		}
 	    String newName = lhs.getName() + "$" + (noUsages.get(lhs.getName()) + 1);
 		AssignStmt newAssign = new AssignStmt(new DeclRef(newName, lhs.getNodeInfo()), assignment.getRhs());
 		Object o = super.visit(newAssign);
