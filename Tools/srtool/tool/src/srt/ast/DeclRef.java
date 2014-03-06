@@ -15,4 +15,19 @@ public class DeclRef extends Expr {
 	public String getName() {
 		return name;
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof DeclRef)) {
+			return false;
+		}
+		
+		DeclRef other = (DeclRef) o;
+		return name.equals(other.name);
+	}
+	
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
 }

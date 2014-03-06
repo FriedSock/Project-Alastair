@@ -50,7 +50,7 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssertStmt assertStmt) {
-		Expr lhs = nestedConds.peek();
+		Expr lhs = getPredicate();
 		UnaryExpr rhs = new UnaryExpr(UnaryExpr.LNOT, assertStmt.getCondition());
 		Expr expr = new UnaryExpr(UnaryExpr.LNOT, new BinaryExpr(BinaryExpr.LAND, lhs, rhs));
 		
@@ -68,9 +68,9 @@ public class PredicationVisitor extends DefaultVisitor {
 		Expr newRHS;
 		if (assignment.getLhs().getName().startsWith("$G")) {
 			int noGlobals = Integer.parseInt(assignment.getLhs().getName().substring(2)) - 1;
-			newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), new DeclRef("$G" + noGlobals));
+			newRHS = new TernaryExpr(getPredicate(), assignment.getRhs(), new DeclRef("$G" + noGlobals));
 		} else {
-			newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), assignment.getLhs());
+			newRHS = new TernaryExpr(getPredicate(), assignment.getRhs(), assignment.getLhs());
 		}
 		Stmt newAssign = new AssignStmt(assignment.getLhs(), newRHS);
 		return newAssign;
@@ -91,7 +91,7 @@ public class PredicationVisitor extends DefaultVisitor {
 	public Object visit(HavocStmt havocStmt) {
 		String havocId = "h$" + noHavocs++;
 		Decl declaration = new Decl(havocId, "int");
-		Expr rhs = new TernaryExpr(nestedConds.peek(), new DeclRef(havocId), havocStmt.getVariable());
+		Expr rhs = new TernaryExpr(getPredicate(), new DeclRef(havocId), havocStmt.getVariable());
 		Stmt assignStmt = new AssignStmt(havocStmt.getVariable(), rhs);
 		
 		List<Stmt> statementList = new ArrayList<>();
@@ -133,6 +133,10 @@ public class PredicationVisitor extends DefaultVisitor {
 		nestedConds.pop();
 		
 		return new BlockStmt(new Stmt[]{decl, newAssign, newBody});
+	}
+	
+	private Expr getPredicate() {
+		return new BinaryExpr(BinaryExpr.LAND, nestedConds.peek(), nestedConds.firstElement());
 	}
 
 }
