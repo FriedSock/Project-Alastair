@@ -2,7 +2,6 @@ package srt.tool;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
@@ -23,6 +22,7 @@ import srt.ast.StmtList;
 import srt.ast.TernaryExpr;
 import srt.ast.UnaryExpr;
 import srt.ast.visitor.impl.DefaultVisitor;
+import srt.util.LogicUtil;
 
 public class PredicationVisitor extends DefaultVisitor {
 	
@@ -50,7 +50,7 @@ public class PredicationVisitor extends DefaultVisitor {
 
 	@Override
 	public Object visit(AssertStmt assertStmt) {
-		Expr lhs = nestedConds.peek(); 
+		Expr lhs = nestedConds.peek();
 		UnaryExpr rhs = new UnaryExpr(UnaryExpr.LNOT, assertStmt.getCondition());
 		Expr expr = new UnaryExpr(UnaryExpr.LNOT, new BinaryExpr(BinaryExpr.LAND, lhs, rhs));
 		
@@ -64,8 +64,15 @@ public class PredicationVisitor extends DefaultVisitor {
 			firstAssignment = false;
 			return assignment;
 		}
-		Expr newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), assignment.getLhs());
-		Stmt newAssign = new AssignStmt(assignment.getLhs(), newRHS); 
+
+		Expr newRHS;
+		if (assignment.getLhs().getName().startsWith("$G")) {
+			int noGlobals = Integer.parseInt(assignment.getLhs().getName().substring(2)) - 1;
+			newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), new DeclRef("$G" + noGlobals));
+		} else {
+			newRHS = new TernaryExpr(nestedConds.peek(), assignment.getRhs(), assignment.getLhs());
+		}
+		Stmt newAssign = new AssignStmt(assignment.getLhs(), newRHS);
 		return newAssign;
 	}
 
@@ -73,7 +80,7 @@ public class PredicationVisitor extends DefaultVisitor {
 	public Object visit(AssumeStmt assumeStmt) {
 		String oldGlobal = "$G" + noGlobals;
 		Expr assumeExpr = new BinaryExpr(BinaryExpr.LAND, new DeclRef(oldGlobal), assumeStmt.getCondition());
-		Stmt assignment = (Stmt) super.visit(new AssignStmt(new DeclRef("$G"+(noGlobals+1)), assumeExpr));
+		Stmt assignment = (Stmt) visit(new AssignStmt(new DeclRef("$G"+(noGlobals+1)), assumeExpr));
 
 		noGlobals++;
 		nestedConds.set(0, new DeclRef("$G" + noGlobals));
@@ -115,7 +122,10 @@ public class PredicationVisitor extends DefaultVisitor {
 		Decl decl = new Decl(name, "int");
 		
 		DeclRef lhs = new DeclRef(name);
-		Expr rhs = joinWithAnd(nestedConds, condition);
+		List<Expr> conditions = new ArrayList<>();
+		conditions.addAll(nestedConds);
+		conditions.add(condition);
+		Expr rhs = LogicUtil.conjoin(conditions);
 		AssignStmt newAssign = new AssignStmt(lhs, rhs);
 		
 		nestedConds.push(lhs);
@@ -123,17 +133,6 @@ public class PredicationVisitor extends DefaultVisitor {
 		nestedConds.pop();
 		
 		return new BlockStmt(new Stmt[]{decl, newAssign, newBody});
-	}
-	
-	private Expr joinWithAnd(Collection<Expr> elements, Expr finalElem) {
-		Expr result = finalElem;
-		
-		for (Expr elem : elements) {
-			BinaryExpr binEx = new BinaryExpr(BinaryExpr.LAND, elem, result);
-			result = binEx;
-		}
-		
-		return result;
 	}
 
 }

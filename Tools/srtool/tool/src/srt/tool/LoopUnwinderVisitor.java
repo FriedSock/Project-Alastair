@@ -10,7 +10,6 @@ import srt.ast.IfStmt;
 import srt.ast.IntLiteral;
 import srt.ast.Invariant;
 import srt.ast.Stmt;
-import srt.ast.StmtList;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
 

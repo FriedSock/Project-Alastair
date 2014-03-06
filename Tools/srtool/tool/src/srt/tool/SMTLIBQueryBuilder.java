@@ -2,7 +2,6 @@ package srt.tool;
 
 import srt.ast.AssertStmt;
 import srt.ast.AssignStmt;
-import srt.ast.Expr;
 
 public class SMTLIBQueryBuilder {
 
@@ -17,7 +16,6 @@ public class SMTLIBQueryBuilder {
 
 	public void buildQuery() {
 		StringBuilder query = new StringBuilder();
-		ExprToSmtlibVisitor exprToSmt = new ExprToSmtlibVisitor();
 		
 		query.append("(set-logic QF_BV)\n"
 				+ "(define-fun tobv32 ((p Bool)) (_ BitVec 32) (ite p (_ bv1 32) (_ bv0 32)))\n"
@@ -29,7 +27,7 @@ public class SMTLIBQueryBuilder {
 		
 		for (AssignStmt assStmt : constraints.transitionNodes) {
 			String name = assStmt.getLhs().getName();
-			String rhs = exprToSmt.visit(assStmt.getRhs());
+			String rhs = exprConverter.visit(assStmt.getRhs());
 			query.append("(assert (= " + name + " " + rhs + "))\n");
 		}
 		
@@ -42,7 +40,7 @@ public class SMTLIBQueryBuilder {
 		
 			int i = 0;
 			for (AssertStmt asrtStmt : constraints.propertyNodes) {
-				String expr = exprToSmt.visit(asrtStmt.getCondition());
+				String expr = exprConverter.visit(asrtStmt.getCondition());
 				query.append("(define-fun prop" + i + " () Bool (not (tobool " + expr + ")))\n");
 				finalAssertion.append("(or prop" + i + "\n");
 				propList.append(" prop" + i++);
