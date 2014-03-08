@@ -1,7 +1,12 @@
 package srt.tool;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import srt.ast.Invariant;
+import srt.ast.InvariantList;
 import srt.ast.Program;
 import srt.ast.visitor.impl.PrinterVisitor;
 import srt.exec.ProcessExec;
@@ -18,14 +23,61 @@ public class SRToolImpl implements SRTool {
 
 	public SRToolResult go() throws IOException, InterruptedException {
 
-		// TODO: Transform program using Visitors here.
-
 		if (clArgs.mode.equals(CLArgs.BMC)) {
 			program = (Program) new LoopUnwinderVisitor(clArgs.unsoundBmc,
 					clArgs.unwindDepth).visit(program);
 		} else {
 			program = (Program) new LoopAbstractionVisitor().visit(program);
 		}
+		
+		if (clArgs.mode.equals(CLArgs.HOUDINI)) {
+    		//extract all loops
+    		Map<Program, InvariantList> whileLoops = (Map<Program, InvariantList>) new HoudiniLoopExtractorVisitor().visit(program);
+    		
+    		for (Entry<Program, InvariantList> singleLoop : whileLoops.entrySet()) {
+                boolean houdiniFails = true;
+                List<Invariant> currentInvariants = singleLoop.getValue().getInvariants();
+        		
+        		while (houdiniFails) {
+        	        // Collect the constraint expressions and variable names.
+        	        CollectConstraintsVisitor ccv = new CollectConstraintsVisitor();
+        	        ccv.visit(singleLoop.getKey());
+        	        
+        	        SMTLIBQueryBuilder builder = new SMTLIBQueryBuilder(ccv);
+        	        builder.buildQuery();
+        	        
+        	        String smtQuery = builder.getQuery();
+        	        
+        	        ProcessExec process = new ProcessExec("z3", "-smt2", "-in");
+        	        String queryResult = "";
+        	        try {
+        	            queryResult = process.execute(smtQuery, clArgs.timeout);
+        	        } catch (ProcessTimeoutException e) {
+        	            if (clArgs.verbose) {
+        	                System.out.println("Timeout!");
+        	            }
+        	            return SRToolResult.UNKNOWN;
+        	        }
+        	        
+        	        if (queryResult.startsWith("unsat")) {
+        	            houdiniFails = false;
+        	        } else if (queryResult.startsWith("sat")) {
+        	            // TODO find failing assertions from queryResult?
+        	            
+        	            // how do we find out what eg. "prop0" actually is so we can remove the invariant? 
+        	            
+        	            // TODO update currentInvariants accordingly
+        	            
+        	            // TODO alter the program (and whileLoops) to reflect currentInvariants
+        	            
+        	            
+        	        }
+        		}
+    		}
+    		
+    		program = (Program) new HoudiniReassemblerVisitor(whileLoops).visit(program);
+		}
+		
 		program = (Program) new PredicationVisitor().visit(program);
 		program = (Program) new SSAVisitor().visit(program);
 
