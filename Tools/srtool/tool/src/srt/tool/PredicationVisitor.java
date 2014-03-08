@@ -39,13 +39,17 @@ public class PredicationVisitor extends DefaultVisitor {
 	
 	@Override
 	public Object visit(IfStmt ifStmt) {
-		Stmt thenBranch = handleBranch(ifStmt.getCondition(), ifStmt.getThenStmt());
+		BlockStmt thenBranch = handleBranch(ifStmt.getCondition(), ifStmt.getThenStmt());
 		if (((StmtList) ifStmt.getElseStmt().getChildrenCopy().get(0)).getStatements().isEmpty()) {
-			return new BlockStmt(new Stmt[]{thenBranch});
+			return thenBranch;
 		}
-		Stmt elseBranch = handleBranch(new UnaryExpr(UnaryExpr.LNOT, ifStmt.getCondition()), ifStmt.getElseStmt());
+		BlockStmt elseBranch = handleBranch(new UnaryExpr(UnaryExpr.LNOT, ifStmt.getCondition()), ifStmt.getElseStmt());
 		
-		return new BlockStmt(new Stmt[]{thenBranch, elseBranch});
+		List<Stmt> flattenedBranches = new ArrayList<>();
+        flattenedBranches.addAll(thenBranch.getStmtList().getStatements());
+        flattenedBranches.addAll(elseBranch.getStmtList().getStatements());
+		
+		return new BlockStmt(flattenedBranches);
 	}
 
 	@Override
@@ -117,7 +121,7 @@ public class PredicationVisitor extends DefaultVisitor {
 	}
 	
 	
-	private Stmt handleBranch(Expr condition, Stmt body) {
+	private BlockStmt handleBranch(Expr condition, Stmt body) {
 		String name = "$P" + noPredicates++;
 		Decl decl = new Decl(name, "int");
 		
