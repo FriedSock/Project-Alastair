@@ -17,6 +17,7 @@ import srt.ast.Program;
 import srt.ast.Stmt;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
+import srt.ast.visitor.impl.PrinterVisitor;
 
 public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     
@@ -38,23 +39,39 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
 
     @Override
     public Object visit(WhileStmt whileStmt) {
-        //whileLoops.add(whileStmt);
+        List<Invariant> invariantsToAdd = invariants != null ? invariants : whileStmt.getInvariantList().getInvariants();
         
     	List<Stmt> stmts = new ArrayList<>();
-        WhileStmt loopStmt = (WhileStmt) super.visit(whileStmt);
+    	int inv = 0;
+        int cand = 0;
+        for (Invariant invariant : invariantsToAdd) {
+        	if (invariant.isCandidate()) {
+        		stmts.add(new AssertStmt(invariant.getExpr(), "cand-" + cand++ + "-pre"));
+        	} else {
+        		stmts.add(new AssertStmt(invariant.getExpr(), "inv-" + inv++ + "-pre"));	
+        	}
+        }
+        
+        inv = 0;
+        cand = 0;
+        List<Stmt> loopBodyStatements = new ArrayList<>();
+        loopBodyStatements.add(whileStmt.getBody());
+        for (Invariant invariant : invariantsToAdd) {
+        	if (invariant.isCandidate()) {
+        		loopBodyStatements.add(new AssertStmt(invariant.getExpr(), "cand-" + cand++ + "-post"));
+        	} else {
+        		loopBodyStatements.add(new AssertStmt(invariant.getExpr(), "inv-" + inv++ + "-post"));	
+        	}
+        }
+    	
+    	BlockStmt loopBody = new BlockStmt(loopBodyStatements);
+    	WhileStmt loopStmt = new WhileStmt(whileStmt.getCondition(), whileStmt.getBound(), new InvariantList(invariantsToAdd), loopBody);
+    	
+        stmts.add(loopStmt);
+        stmts.add(new AssumeStmt(new IntLiteral(0)));
+
         loop = loopStmt;
         
-        int i = 0;
-        List<Invariant> invariantsToAdd = invariants != null ? invariants : loopStmt.getInvariantList().getInvariants();
-        for (Invariant invariant : invariantsToAdd) {
-        	stmts.add(new AssertStmt(invariant.getExpr(), "inv-" + i++ + "-pre"));
-        }
-        stmts.add(loopStmt);
-        i = 0;
-        for (Invariant invariant : invariantsToAdd) {
-        	stmts.add(new AssertStmt(invariant.getExpr(), "inv-" + i++ + "-post"));
-        }
-        stmts.add(new AssumeStmt(new IntLiteral(0)));
         return new BlockStmt(stmts);
     }
     

@@ -56,23 +56,31 @@ public class SRToolImpl implements SRTool {
 						validInvariants.add(invariant);
 					}
 				}
+				
+				
 
 				TreeSet<Integer> invalidInvariants = new TreeSet<>();
 				do {
 					invalidInvariants.clear();
-					for(Invariant inv : candidateInvariants) {
-						//System.out.println(v.visit(inv.getExpr()));
-					}
+					
 					//loop.getInvariantList().setInvariants(candidateInvariants);
 
 					Program newLoopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
+
 					newLoopProgram = (Program) new PredicationVisitor().visit(newLoopProgram);
 					newLoopProgram = (Program) new SSAVisitor().visit(newLoopProgram);
 
-					//System.out.println(v.visit(loopProgram));
+					//System.out.println(v.visit(newLoopProgram));
+					
+					//System.out.println("CANDIDATES:");
+					for(Invariant inv : candidateInvariants) {
+						//System.out.println(v.visit(inv.getExpr()));
+					}
 
 					String smtQuery = buildSMTQuery(newLoopProgram);
 					String queryResult = solve(smtQuery);
+					//System.out.println(smtQuery);
+					//System.out.println(queryResult);
 					if (queryResult == null) {
 						return SRToolResult.UNKNOWN;
 					}
@@ -84,7 +92,7 @@ public class SRToolImpl implements SRTool {
 							String match = m.group();
 							String[] matches = match.split(" ");
 							String invariantName = matches[0];
-							if (matches[1].equals("true") && invariantName.contains("-")) {
+							if (matches[1].equals("true") && invariantName.startsWith("cand")) {
 								int invalidInvariant = Integer.parseInt(invariantName.split("-")[1]);
 								invalidInvariants.add(invalidInvariant);
 							}
@@ -102,6 +110,12 @@ public class SRToolImpl implements SRTool {
 					newInvariants.addAll(candidateInvariants);
 					loopExtractor.setInvariants(newInvariants);
 					loopProgram = (Program) loopExtractor.visit(program);
+					
+					for(Invariant inv : newInvariants) {
+						//System.out.println(v.visit(inv.getExpr()));
+					}
+					
+					//System.out.println(new PrinterVisitor().visit(loopProgram));
 				} while (!invalidInvariants.isEmpty());
 
 				validInvariants.addAll(candidateInvariants);
