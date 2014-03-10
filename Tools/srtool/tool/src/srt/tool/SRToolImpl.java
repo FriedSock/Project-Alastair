@@ -62,7 +62,7 @@ public class SRToolImpl implements SRTool {
 					return SRToolResult.UNKNOWN;
 				}
 				
-				System.out.println(queryResult);
+				//System.out.println(queryResult);
 
 				if (queryResult.startsWith("unsat")) {
 					validInvariants.add(invariant);
