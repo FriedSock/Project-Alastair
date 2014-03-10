@@ -1,6 +1,8 @@
 package srt.tool;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import srt.ast.BlockStmt;
@@ -13,9 +15,8 @@ import srt.ast.visitor.impl.DefaultVisitor;
 
 public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     
-    private String functionName = null;
     private DeclList declList = null;
-    private Map<Program, InvariantList> whileLoops = new HashMap<Program, InvariantList>();
+    private List<WhileStmt> whileLoops = new ArrayList<>();
 
 	public HoudiniLoopExtractorVisitor() {
 		super(true);
@@ -23,21 +24,25 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
 
     @Override
     public Object visit(Program program) {
-        functionName = program.getFunctionName();
         declList = program.getDeclList();
         
-        super.visit(program); // step through program, adding (declList + while loops) to whileLoops
+        super.visit(program);
         
-        return whileLoops;
+        return program;
     }
 
     @Override
     public Object visit(WhileStmt whileStmt) {
-        BlockStmt blockStmt = new BlockStmt(new Stmt[]{whileStmt});
-        Program p = new Program(functionName, declList, blockStmt);
-        whileLoops.put(p, whileStmt.getInvariantList());
+        whileLoops.add(whileStmt);
         
-        return super.visit(whileStmt); // recurse for inner loops, or cover this in the reassembler?
+        return super.visit(whileStmt);
+    }
+    
+    public DeclList getDeclarations() {
+    	return declList;
     }
 
+    public List<WhileStmt> getWhileLoops() {
+    	return whileLoops;
+    }
 }

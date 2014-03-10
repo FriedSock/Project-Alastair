@@ -1,5 +1,6 @@
 package srt.tool;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,27 +12,18 @@ import srt.ast.visitor.impl.DefaultVisitor;
 
 public class HoudiniReassemblerVisitor extends DefaultVisitor {
     
-    private Map<Program, InvariantList> whileLoops;
+    private List<WhileStmt> newWhileLoops;
+    private int loopCounter = 0;
 
-	public HoudiniReassemblerVisitor(Map<Program, InvariantList> wL) {
+	public HoudiniReassemblerVisitor(List<WhileStmt> newWhileLoops) {
 		super(true);
-		whileLoops = wL;
+		this.newWhileLoops = newWhileLoops;
 	}
 
 	@Override
 	public Object visit(WhileStmt whileStmt) {
-	    Set<Program> loops = whileLoops.keySet();
-	    Stmt newLoop = null;
-	    for (Program p : loops) {
-	        Stmt loop = p.getBlockStmt();
-	        // TODO ensure/make equals() works
-	        if (whileStmt.equals(loop)) {
-	            newLoop = loop;
-	            break;
-	        }
-	    }
-	    
-	    return super.visit(newLoop); // recurse for inner loops, or cover this in the loop extractor?
+		WhileStmt loop = newWhileLoops.get(loopCounter++);
+		return super.visit(loop);
 	}
 
 }
