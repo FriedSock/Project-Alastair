@@ -2,16 +2,19 @@ package srt.tool;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import srt.ast.BlockStmt;
+import srt.ast.Decl;
 import srt.ast.DeclList;
 import srt.ast.Invariant;
 import srt.ast.InvariantList;
 import srt.ast.Program;
 import srt.ast.Stmt;
+import srt.ast.StmtList;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.PrinterVisitor;
 import srt.exec.ProcessExec;
@@ -27,36 +30,48 @@ public class SRToolImpl implements SRTool {
 	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
-
-		if (clArgs.mode.equals(CLArgs.BMC)) {
-			program = (Program) new LoopUnwinderVisitor(clArgs.unsoundBmc,
-					clArgs.unwindDepth).visit(program);
-		} else {
-			program = (Program) new LoopAbstractionVisitor().visit(program);
-		}
 		
+		PrinterVisitor v = new PrinterVisitor();
+
 		if (clArgs.mode.equals(CLArgs.HOUDINI)) {
     		// Extract all loops
 			HoudiniLoopExtractorVisitor loopExtractor = new HoudiniLoopExtractorVisitor();
 			loopExtractor.visit(program);
-			DeclList declarations = loopExtractor.getDeclarations();
+			
 			List<WhileStmt> whileLoops = loopExtractor.getWhileLoops();
 			List<WhileStmt> newWhileLoops = new ArrayList<>();
+			List<Stmt> declarations = loopExtractor.getDeclarations();
+			StmtList declarationStatements = new StmtList(declarations);
 			
 			for (WhileStmt loop : whileLoops) {
 				List<Invariant> invariants = loop.getInvariantList().getInvariants();
 				List<Invariant> validInvariants = new ArrayList<>();
 				
 				for (Invariant invariant : invariants) {
+					if (!invariant.isCandidate()) {
+						validInvariants.add(invariant);
+						continue;
+					}
+					
+					System.out.println(v.visit(invariant.getExpr()));
+					
 					InvariantList newInvariants = new InvariantList(new Invariant[] {invariant});
 					WhileStmt newLoop = new WhileStmt(loop.getCondition(), loop.getBound(), newInvariants, loop.getBody());
-					Program loopProgram = new Program("main", declarations, new BlockStmt(new Stmt[] {newLoop}));
+					Program loopProgram = new Program(program.getFunctionName(), program.getDeclList(),
+							new BlockStmt(new Stmt[] {new BlockStmt(declarationStatements), newLoop}));
+					loopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
+					loopProgram = (Program) new PredicationVisitor().visit(loopProgram);
+					loopProgram = (Program) new SSAVisitor().visit(loopProgram);
+					
+					System.out.println(new PrinterVisitor().visit(loopProgram));
 
 					String smtQuery = buildSMTQuery(loopProgram);
 					String queryResult = solve(smtQuery);
 					if (queryResult == null) {
 						return SRToolResult.UNKNOWN;
 					}
+					
+					System.out.println(queryResult);
 
 					if (queryResult.startsWith("unsat")) {
 						validInvariants.add(invariant);
@@ -69,6 +84,13 @@ public class SRToolImpl implements SRTool {
     		program = (Program) new HoudiniReassemblerVisitor(newWhileLoops).visit(program);
 		}
 		
+		if (clArgs.mode.equals(CLArgs.BMC)) {
+			program = (Program) new LoopUnwinderVisitor(clArgs.unsoundBmc,
+					clArgs.unwindDepth).visit(program);
+		} else {
+			program = (Program) new LoopAbstractionVisitor().visit(program);
+		}
+
 		program = (Program) new PredicationVisitor().visit(program);
 		program = (Program) new SSAVisitor().visit(program);
 

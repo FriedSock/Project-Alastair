@@ -21,6 +21,7 @@ public class SSAVisitor extends DefaultVisitor {
 		if (decl.getName().contains("$")) {
 			return super.visit(decl);
 		}
+
 		noUsages.put(decl.getName(), 0);
 	    String newName = decl.getName() + "$0";
 		Decl newDecl = new Decl(newName, decl.getType(), decl.getNodeInfo());
@@ -43,6 +44,7 @@ public class SSAVisitor extends DefaultVisitor {
 		if (lhs.getName().contains("$")) {
 			return super.visit(assignment);
 		}
+
 	    String newName = lhs.getName() + "$" + (noUsages.get(lhs.getName()) + 1);
 		AssignStmt newAssign = new AssignStmt(new DeclRef(newName, lhs.getNodeInfo()), assignment.getRhs());
 		Object o = super.visit(newAssign);
