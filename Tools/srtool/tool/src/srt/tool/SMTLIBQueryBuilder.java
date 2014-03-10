@@ -8,6 +8,7 @@ public class SMTLIBQueryBuilder {
 	private ExprToSmtlibVisitor exprConverter;
 	private CollectConstraintsVisitor constraints;
 	private String queryString = "";
+	private int ass = 0;
 
 	public SMTLIBQueryBuilder(CollectConstraintsVisitor ccv) {
 		this.constraints = ccv;
@@ -41,9 +42,10 @@ public class SMTLIBQueryBuilder {
 			int i = 0;
 			for (AssertStmt asrtStmt : constraints.propertyNodes) {
 				String expr = exprConverter.visit(asrtStmt.getCondition());
-				query.append("(define-fun prop" + i + " () Bool (not (tobool " + expr + ")))\n");
-				finalAssertion.append("(or prop" + i + "\n");
-				propList.append(" prop" + i++);
+				String name = asrtStmt.getName() != null ? asrtStmt.getName() : ("prop" + i++);
+				query.append("(define-fun " + name + " () Bool (not (tobool " + expr + ")))\n");
+				finalAssertion.append("(or " + name + "\n");
+				propList.append(" " + name);
 				closingBrackets.append(")");
 			}
 			finalAssertion.append(closingBrackets.toString() + ")\n");

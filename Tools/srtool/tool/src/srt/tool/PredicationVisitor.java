@@ -58,7 +58,7 @@ public class PredicationVisitor extends DefaultVisitor {
 		UnaryExpr rhs = new UnaryExpr(UnaryExpr.LNOT, assertStmt.getCondition());
 		Expr expr = new UnaryExpr(UnaryExpr.LNOT, new BinaryExpr(BinaryExpr.LAND, lhs, rhs));
 		
-		return super.visit(new AssertStmt(expr));
+		return super.visit(new AssertStmt(expr, assertStmt.getName()));
 	}
 
 	@Override

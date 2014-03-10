@@ -6,6 +6,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import srt.ast.BlockStmt;
 import srt.ast.Decl;
@@ -39,81 +44,74 @@ public class SRToolImpl implements SRTool {
 			Program loopProgram = (Program) loopExtractor.visit(program);
 			WhileStmt loop = loopExtractor.getLoop();
 			
-			List<Invariant> invariants = loop.getInvariantList().getInvariants();
-			List<Invariant> validInvariants = new ArrayList<>();
-			
-			for (Invariant invariant : invariants) {
-				if (!invariant.isCandidate()) {
-					validInvariants.add(invariant);
-					continue;
-				}
-
-				List<Invariant> invariantList = new ArrayList<>();
-				invariantList.add(invariant);
-				loop.getInvariantList().setInvariants(invariantList);
-				
-				Program newLoopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
-				newLoopProgram = (Program) new PredicationVisitor().visit(newLoopProgram);
-				newLoopProgram = (Program) new SSAVisitor().visit(newLoopProgram);
-				
-				String smtQuery = buildSMTQuery(newLoopProgram);
-				String queryResult = solve(smtQuery);
-				if (queryResult == null) {
-					return SRToolResult.UNKNOWN;
-				}
-				
-				//System.out.println(queryResult);
-
-				if (queryResult.startsWith("unsat")) {
-					validInvariants.add(invariant);
-				}
-			}
-			
-			
-			//List<WhileStmt> whileLoops = loopExtractor.getWhileLoops();
-			//List<WhileStmt> newWhileLoops = new ArrayList<>();
-			//List<Stmt> declarations = loopExtractor.getDeclarations();
-			//StmtList declarationStatements = new StmtList(declarations);
-			
-			/*for (WhileStmt loop : whileLoops) {
+			if (loop != null) {
 				List<Invariant> invariants = loop.getInvariantList().getInvariants();
 				List<Invariant> validInvariants = new ArrayList<>();
-				
-				for (Invariant invariant : invariants) {
-					if (!invariant.isCandidate()) {
-						validInvariants.add(invariant);
-						continue;
-					}
-					
-					System.out.println(v.visit(invariant.getExpr()));
-					
-					InvariantList newInvariants = new InvariantList(new Invariant[] {invariant});
-					WhileStmt newLoop = new WhileStmt(loop.getCondition(), loop.getBound(), newInvariants, loop.getBody());
-					Program loopProgram = new Program(program.getFunctionName(), program.getDeclList(),
-							new BlockStmt(new Stmt[] {new BlockStmt(declarationStatements), newLoop}));
-					loopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
-					loopProgram = (Program) new PredicationVisitor().visit(loopProgram);
-					loopProgram = (Program) new SSAVisitor().visit(loopProgram);
-					
-					System.out.println(new PrinterVisitor().visit(loopProgram));
+				List<Invariant> candidateInvariants = new ArrayList<>();
 
-					String smtQuery = buildSMTQuery(loopProgram);
+				for (Invariant invariant : invariants) {
+					if (invariant.isCandidate()) {
+						candidateInvariants.add(invariant);
+					} else {
+						validInvariants.add(invariant);
+					}
+				}
+
+				TreeSet<Integer> invalidInvariants = new TreeSet<>();
+				do {
+					invalidInvariants.clear();
+					for(Invariant inv : candidateInvariants) {
+						//System.out.println(v.visit(inv.getExpr()));
+					}
+					//loop.getInvariantList().setInvariants(candidateInvariants);
+
+					Program newLoopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
+					newLoopProgram = (Program) new PredicationVisitor().visit(newLoopProgram);
+					newLoopProgram = (Program) new SSAVisitor().visit(newLoopProgram);
+
+					//System.out.println(v.visit(loopProgram));
+
+					String smtQuery = buildSMTQuery(newLoopProgram);
 					String queryResult = solve(smtQuery);
 					if (queryResult == null) {
 						return SRToolResult.UNKNOWN;
 					}
-					
-					System.out.println(queryResult);
 
-					if (queryResult.startsWith("unsat")) {
-						validInvariants.add(invariant);
+					if (!queryResult.startsWith("unsat")) {
+						Pattern p = Pattern.compile("([\\w-]+ \\w+)");
+						Matcher m = p.matcher(queryResult);
+						while (m.find()) { // find next match
+							String match = m.group();
+							String[] matches = match.split(" ");
+							String invariantName = matches[0];
+							if (matches[1].equals("true") && invariantName.contains("-")) {
+								int invalidInvariant = Integer.parseInt(invariantName.split("-")[1]);
+								invalidInvariants.add(invalidInvariant);
+							}
+						}
+
+						for (int invariantIndex : invalidInvariants.descendingSet()) {
+							candidateInvariants.remove(invariantIndex);
+						}
 					}
+					//System.out.println(candidateInvariants);
+					//System.out.println(invalidInvariants);
+
+					List<Invariant> newInvariants = new ArrayList<>();
+					newInvariants.addAll(validInvariants);
+					newInvariants.addAll(candidateInvariants);
+					loopExtractor.setInvariants(newInvariants);
+					loopProgram = (Program) loopExtractor.visit(program);
+				} while (!invalidInvariants.isEmpty());
+
+				validInvariants.addAll(candidateInvariants);
+
+				for (Invariant i : validInvariants) {
+					//System.out.println(new PrinterVisitor().visit(i.getExpr()));
 				}
-				
-				newWhileLoops.add(new WhileStmt(loop.getCondition(), loop.getBound(), new InvariantList(validInvariants), loop.getBody()));
-			}*/
-    		
-    		program = (Program) new HoudiniReassemblerVisitor(validInvariants).visit(program);
+
+				program = (Program) new HoudiniReassemblerVisitor(validInvariants).visit(program);
+			}
 		}
 		
 		if (clArgs.mode.equals(CLArgs.BMC)) {
