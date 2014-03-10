@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import srt.ast.Invariant;
 import srt.ast.InvariantList;
 import srt.ast.Program;
 import srt.ast.Stmt;
@@ -12,18 +13,21 @@ import srt.ast.visitor.impl.DefaultVisitor;
 
 public class HoudiniReassemblerVisitor extends DefaultVisitor {
     
-    private List<WhileStmt> newWhileLoops;
-    private int loopCounter = 0;
+    private List<Invariant> newInvariants;
+    private boolean firstLoop = true;
 
-	public HoudiniReassemblerVisitor(List<WhileStmt> newWhileLoops) {
+	public HoudiniReassemblerVisitor(List<Invariant> newInvariants) {
 		super(true);
-		this.newWhileLoops = newWhileLoops;
+		this.newInvariants = newInvariants;
 	}
 
 	@Override
 	public Object visit(WhileStmt whileStmt) {
-		WhileStmt loop = newWhileLoops.get(loopCounter++);
-		return super.visit(loop);
+		if (firstLoop) {
+			whileStmt.getInvariantList().setInvariants(newInvariants);
+			firstLoop = false;
+		}
+		return super.visit(whileStmt);
 	}
 
 }

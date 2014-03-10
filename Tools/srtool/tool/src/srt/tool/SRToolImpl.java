@@ -36,14 +36,46 @@ public class SRToolImpl implements SRTool {
 		if (clArgs.mode.equals(CLArgs.HOUDINI)) {
     		// Extract all loops
 			HoudiniLoopExtractorVisitor loopExtractor = new HoudiniLoopExtractorVisitor();
-			loopExtractor.visit(program);
+			Program loopProgram = (Program) loopExtractor.visit(program);
+			WhileStmt loop = loopExtractor.getLoop();
 			
-			List<WhileStmt> whileLoops = loopExtractor.getWhileLoops();
-			List<WhileStmt> newWhileLoops = new ArrayList<>();
-			List<Stmt> declarations = loopExtractor.getDeclarations();
-			StmtList declarationStatements = new StmtList(declarations);
+			List<Invariant> invariants = loop.getInvariantList().getInvariants();
+			List<Invariant> validInvariants = new ArrayList<>();
 			
-			for (WhileStmt loop : whileLoops) {
+			for (Invariant invariant : invariants) {
+				if (!invariant.isCandidate()) {
+					validInvariants.add(invariant);
+					continue;
+				}
+
+				List<Invariant> invariantList = new ArrayList<>();
+				invariantList.add(invariant);
+				loop.getInvariantList().setInvariants(invariantList);
+				
+				Program newLoopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
+				newLoopProgram = (Program) new PredicationVisitor().visit(newLoopProgram);
+				newLoopProgram = (Program) new SSAVisitor().visit(newLoopProgram);
+				
+				String smtQuery = buildSMTQuery(newLoopProgram);
+				String queryResult = solve(smtQuery);
+				if (queryResult == null) {
+					return SRToolResult.UNKNOWN;
+				}
+				
+				System.out.println(queryResult);
+
+				if (queryResult.startsWith("unsat")) {
+					validInvariants.add(invariant);
+				}
+			}
+			
+			
+			//List<WhileStmt> whileLoops = loopExtractor.getWhileLoops();
+			//List<WhileStmt> newWhileLoops = new ArrayList<>();
+			//List<Stmt> declarations = loopExtractor.getDeclarations();
+			//StmtList declarationStatements = new StmtList(declarations);
+			
+			/*for (WhileStmt loop : whileLoops) {
 				List<Invariant> invariants = loop.getInvariantList().getInvariants();
 				List<Invariant> validInvariants = new ArrayList<>();
 				
@@ -79,9 +111,9 @@ public class SRToolImpl implements SRTool {
 				}
 				
 				newWhileLoops.add(new WhileStmt(loop.getCondition(), loop.getBound(), new InvariantList(validInvariants), loop.getBody()));
-			}
+			}*/
     		
-    		program = (Program) new HoudiniReassemblerVisitor(newWhileLoops).visit(program);
+    		program = (Program) new HoudiniReassemblerVisitor(validInvariants).visit(program);
 		}
 		
 		if (clArgs.mode.equals(CLArgs.BMC)) {
