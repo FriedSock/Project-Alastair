@@ -12,10 +12,33 @@
 \maketitle
 
 \section{SSA renaming}
+\section{Loop Removal}
+Is this part of predicated execution
 \section{Predicated execution}
+The workhorse of our implementation of Predicated Execution is our scope stack. This scope stack initially
+has the Global predicate pushed onto it. Then, each time a conditional is entered, the predicate for its
+satifaction is pushed onto the stack, similarly when the conditional body is left, this Predicate is
+popped off the stack.\\
+
+TODO: Why do we actually have the global predicate on the stack now?
+
+Every assignment statement (Including those of new predicates), is predicated using the ternary operator
+with the Latest version of the global predicate, in conjunction with the conditional predicate on the
+top of our scope stack. If this check fails, then the assignment will return the original variable value
+(equivalent to a no-op), otherwise - the assignment will succeed. \\
+
+TODO: Talk about \verb|havoc()| and \verb|assume()|
+
 \section{Bounded Model Checking}
 \section{Verification mode}
 \section{Houdini}
+
+For our implementation of Houdini we decided to translate each of the loops in the program, into its own
+program which we then run our the main functionality of the tool on. This required creating a new AST
+program, which consisted of the same declist (program arguments), along with the same intial list of
+variable declarations. No other in formation from the original program needs to be copied, because our
+candidate loop invariants are inductive, we don't care about the state of the program before the loop
+is reached. We also don't care about any assertions that may occur after the execution of this loop.
 \section{Candidate Invariant Generation}
 \section{Competition Mode}
 
