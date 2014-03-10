@@ -9,7 +9,7 @@ ONLY_REPORT_FAILURES=0
 
 # Loop-free tests (should work with all modes)
 
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc
 #tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode bmc -unsound
 #tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode verifier
 #tester/tester_run.sh tests/verifier $ONLY_REPORT_FAILURES -mode verifier
