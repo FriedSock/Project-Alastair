@@ -46,17 +46,7 @@ public class SRToolImpl implements SRTool {
 			Set<Integer> intLiterals = componentExtractor.getIntLiterals();
 			
 			intLiterals.add(0);  // 0 is good
-			
-			System.out.println("Variables:");
-			for (String variable : variableNames) {
-				System.out.println(variable);
-			}
-			
-			System.out.println("Int literals:");
-			for (Integer intLiteral : intLiterals) {
-				System.out.println(intLiteral);
-			}
-			
+
 			List<Invariant> commonInvariants = new ArrayList<>();
 			
 			// Generate all the things
@@ -84,17 +74,14 @@ public class SRToolImpl implements SRTool {
 					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, a, n)));
 					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, a, n)));
 				}
-			}
-			
-			for (Invariant i : commonInvariants) {
-				print(i.getExpr());
+				
+				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("i"), new IntLiteral(300))));
+				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("j"), new IntLiteral(300))));
+				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("k"), new IntLiteral(200))));
+				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("l"), new IntLiteral(200))));
 			}
 			
 			program = (Program) new AddCandidateInvariantsVisitor(commonInvariants).visit(program);
-			
-			System.out.println(new PrinterVisitor().visit(program));
-			
-			System.out.println("---");
 		}
 
 		if (clArgs.mode.equals(CLArgs.HOUDINI) || clArgs.mode.equals(CLArgs.INVGEN)) {
@@ -144,7 +131,6 @@ public class SRToolImpl implements SRTool {
 							String[] matches = match.split(" ");
 							String invariantName = matches[0];
 							
-							
 							if (invariantName.startsWith("cand")) {
 								if (matches[1].equals("true")) {
 									atLeastOneCandidateFailed = true;
@@ -162,9 +148,8 @@ public class SRToolImpl implements SRTool {
 							}
 						}
 
-
 						List<Set<Integer>> trueCandidates = new ArrayList<>();
-						for(int i = 0; i < loopCount; i++) {
+						for (int i = 0; i < loopCount; i++) {
 							postTrueCandidates.get(i).retainAll(preTrueCandidates.get(i));
 							trueCandidates.add(postTrueCandidates.get(i));
 						}

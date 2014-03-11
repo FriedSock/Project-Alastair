@@ -11,6 +11,7 @@ import srt.ast.InvariantList;
 import srt.ast.Stmt;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
+import srt.ast.visitor.impl.PrinterVisitor;
 
 public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     

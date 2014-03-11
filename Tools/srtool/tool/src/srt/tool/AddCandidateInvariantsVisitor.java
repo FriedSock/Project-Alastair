@@ -3,6 +3,7 @@ package srt.tool;
 import java.util.ArrayList;
 import java.util.List;
 
+import srt.ast.BlockStmt;
 import srt.ast.Invariant;
 import srt.ast.InvariantList;
 import srt.ast.WhileStmt;
@@ -23,6 +24,6 @@ public class AddCandidateInvariantsVisitor extends DefaultVisitor {
 		invariants.addAll(commonInvariants);
 		
 		return new WhileStmt(whileStmt.getCondition(), whileStmt.getBound(),
-				new InvariantList(invariants), whileStmt.getBody());
+				new InvariantList(invariants), (BlockStmt) super.visit(whileStmt.getBody()));
 	}
 }
