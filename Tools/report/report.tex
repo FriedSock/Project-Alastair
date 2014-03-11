@@ -13,18 +13,68 @@
 
 \section{SMT Formula Generation (maybe not this section?)}
 \section{SSA Renaming}
-\section{Predication}
 
-This task was reasonably straighforward, though we did run into a few small issues when we implemented later tasks, and we had to return and handle some edge cases in the \verb|SSAVisitor| class. These were mainly to do with variables we introduced in predication, and the `free' variables we introduced when handling \verb|havoc| statements.
+This task was reasonably straightforward, though we did run into a few small issues when we implemented later
+tasks, and we had to return and handle some edge cases in the \verb|SSAVisitor| class. These were mainly to do
+with variables we introduced in predication, and the `free' variables we introduced when handling \verb|havoc|
+statements. \\
 
-In terms of implementation, we simply kept a record (using a \verb|Map|) of the current number of assignments to each variable, starting with 0 when the variable is declared. We then just needed to append the character `\$', and this recorded number every time we encountered a reference to the variable. Upon reaching an assignment statement, we first handled the right-hand side of the assignment \emph{before} incrementing assignment count - to account for cases where the assignment may reference the variable itself (eg. \verb|x = x + 1|).
+In terms of implementation, we simply kept a record (using a \verb|Map|) of the current number of assignments to
+each variable, starting with 0 when the variable is declared. We then just needed to append the character `\$',
+and this recorded number every time we encountered a reference to the variable. Upon reaching an assignment
+statement, we first handled the right-hand side of the assignment \emph{before} incrementing assignment count -
+to account for cases where the assignment may reference the variable itself (eg. \verb|x = x + 1|). \\
 
-The problems we encountered with the variables we had introduced were solved with a check for the character `\$', which we would use in our variables.
+The problems we encountered with the variables we had introduced were solved with a check for the character `\$',
+which we would use in our variables.
+
+\section{Loop Removal}
+Is this part of predicated execution
+\section{Predicated execution}
+The workhorse of our implementation of Predicated Execution is our scope stack. This scope stack initially
+has the Global predicate pushed onto it. Then, each time a conditional is entered, the predicate for its
+satisfaction is pushed onto the stack, similarly when the conditional body is left, this Predicate is
+popped off the stack.\\
+
+TODO: Why do we actually have the global predicate on the stack now?
+
+Every assignment statement (Including those of new predicates), is predicated using the ternary operator
+with the Latest version of the global predicate, in conjunction with the conditional predicate on the
+top of our scope stack. If this check fails, then the assignment will return the original variable value
+(equivalent to a no-op), otherwise - the assignment will succeed. \\
+
+TODO: Talk about \verb|havoc()| and \verb|assume()|
 
 \section{Bounded Model Checking}
-\section{Verifier Mode}
-\section{Houdini Mode}
+Did we do anything extra than the notes?
+\section{Verification mode}
+Did we do anything extra than the notes?
+\section{Houdini}
+
+For our implementation of Houdini we decided to translate each of the loops in the program, into its own
+program which we then run the loop verification functionality of the tool on. This involved an inserting an
+\verb|assert(0)| after the loop had finished (because we don't care about what happens in the program after
+this loop). We did, however, need to care about all statements before the loop starts, so we can know if the
+loop invariants hold the first time the loop head is reached.\\
+
+After the verifier had been run on a while loop for the first time, we need to check which of the candidate
+invariants failed. This required renaming the \verb|assert| statements in our SMT formula that corresponded
+to each candidate invariant.
+
+TODO: Give an example \\
+
 \section{Invgen Mode}
+After knowing which invariants failed, we then iteratively ran the verifier, removing failed invariants each time
+until we reached a fixed point.
+
+\subsection{Nested Loops}
+
+When proving invariants of nested loops, we must verify the outer loop simultaneously with any interior loops. This
+is because the invariants of each loop are dependent on each other. (This gon be reel complicated)
+
+\section{Candidate Invariant Generation}
+Not done it yet.
 \section{Competition Mode}
+Not done it yet.
 
 \end{document}
