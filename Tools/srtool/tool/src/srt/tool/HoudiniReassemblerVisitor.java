@@ -13,20 +13,21 @@ import srt.ast.visitor.impl.DefaultVisitor;
 
 public class HoudiniReassemblerVisitor extends DefaultVisitor {
     
-    private List<Invariant> newInvariants;
-    private boolean firstLoop = true;
+    private List<List<Invariant>> newInvariantList;
+    
+    //Note: This needs to be reset *externally* every time the visitor does a pass.
+    private int id;
 
-	public HoudiniReassemblerVisitor(List<Invariant> newInvariants) {
+	public HoudiniReassemblerVisitor(List<List<Invariant>> newInvariants) {
 		super(true);
-		this.newInvariants = newInvariants;
+		this.newInvariantList = newInvariants;
 	}
 
 	@Override
 	public Object visit(WhileStmt whileStmt) {
-		if (firstLoop) {
-			whileStmt.getInvariantList().setInvariants(newInvariants);
-			firstLoop = false;
-		}
+		List<Invariant> newInvariants = newInvariantList.get(id); 
+		whileStmt.getInvariantList().setInvariants(newInvariants);
+		id++;
 		return super.visit(whileStmt);
 	}
 

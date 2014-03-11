@@ -3,9 +3,11 @@ package srt.tool;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,96 +37,85 @@ public class SRToolImpl implements SRTool {
 	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
-		
-		PrinterVisitor v = new PrinterVisitor();
 
 		if (clArgs.mode.equals(CLArgs.HOUDINI)) {
     		// Extract all loops
 			HoudiniLoopExtractorVisitor loopExtractor = new HoudiniLoopExtractorVisitor();
 			Program loopProgram = (Program) loopExtractor.visit(program);
-			WhileStmt loop = loopExtractor.getLoop();
+			loopExtractor.setFirstPassFinished();
 			
-			if (loop != null) {
-				List<Invariant> invariants = loop.getInvariantList().getInvariants();
-				List<Invariant> validInvariants = new ArrayList<>();
-				List<Invariant> candidateInvariants = new ArrayList<>();
-
-				for (Invariant invariant : invariants) {
-					if (invariant.isCandidate()) {
-						candidateInvariants.add(invariant);
-					} else {
-						validInvariants.add(invariant);
-					}
+			if (!loopExtractor.noLoops()) {
+				boolean atLeastOneCandidateFailed;
+				List<Set<Integer>> preTrueCandidates = new ArrayList<>();
+				List<Set<Integer>> postTrueCandidates = new ArrayList<>();
+				int loopCount = loopExtractor.loopCount();
+				for (int i = 0; i < loopCount; i++) {
+					preTrueCandidates.add(new HashSet<Integer>());
+					postTrueCandidates.add(new HashSet<Integer>());
 				}
 				
-				
-
-				TreeSet<Integer> invalidInvariants = new TreeSet<>();
 				do {
-					invalidInvariants.clear();
+					// Reset what needs resetting
+					loopExtractor.reset();
+					atLeastOneCandidateFailed = false;
+					preTrueCandidates = new ArrayList<>();
+					postTrueCandidates = new ArrayList<>();
+					for (int i = 0; i < loopCount; i++) {
+						preTrueCandidates.add(new HashSet<Integer>());
+						postTrueCandidates.add(new HashSet<Integer>());
+					}
 					
-					//loop.getInvariantList().setInvariants(candidateInvariants);
-
 					Program newLoopProgram = (Program) new LoopAbstractionVisitor().visit(loopProgram);
-
 					newLoopProgram = (Program) new PredicationVisitor().visit(newLoopProgram);
 					newLoopProgram = (Program) new SSAVisitor().visit(newLoopProgram);
 
-					//System.out.println(v.visit(newLoopProgram));
-					
-					//System.out.println("CANDIDATES:");
-					for(Invariant inv : candidateInvariants) {
-						//System.out.println(v.visit(inv.getExpr()));
-					}
-
 					String smtQuery = buildSMTQuery(newLoopProgram);
 					String queryResult = solve(smtQuery);
-					//System.out.println(smtQuery);
-					//System.out.println(queryResult);
+					
 					if (queryResult == null) {
 						return SRToolResult.UNKNOWN;
 					}
-
+					
 					if (!queryResult.startsWith("unsat")) {
 						Pattern p = Pattern.compile("([\\w-]+ \\w+)");
 						Matcher m = p.matcher(queryResult);
+						
 						while (m.find()) { // find next match
 							String match = m.group();
 							String[] matches = match.split(" ");
 							String invariantName = matches[0];
-							if (matches[1].equals("true") && invariantName.startsWith("cand")) {
-								int invalidInvariant = Integer.parseInt(invariantName.split("-")[1]);
-								invalidInvariants.add(invalidInvariant);
+							
+							
+							if (invariantName.startsWith("cand")) {
+								if (matches[1].equals("true")) {
+									atLeastOneCandidateFailed = true;
+								} else if (matches[1].equals("false")) {
+									String[] splitString = matches[0].split("-");
+									int loopId = Integer.parseInt(splitString[1]);
+									int invId = Integer.parseInt(splitString[2]);
+									if(splitString[3].equals("pre")) {
+										preTrueCandidates.get(loopId).add(invId);			
+									} else if (splitString[3].equals("post")) {
+										postTrueCandidates.get(loopId).add(invId);
+									}
+
+								}
 							}
 						}
 
-						for (int invariantIndex : invalidInvariants.descendingSet()) {
-							candidateInvariants.remove(invariantIndex);
+
+						List<Set<Integer>> trueCandidates = new ArrayList<>();
+						for(int i = 0; i < loopCount; i++) {
+							postTrueCandidates.get(i).retainAll(preTrueCandidates.get(i));
+							trueCandidates.add(postTrueCandidates.get(i));
 						}
+						loopExtractor.setCandidates(trueCandidates);
+						loopProgram = (Program) loopExtractor.visit(program);
 					}
-					//System.out.println(candidateInvariants);
-					//System.out.println(invalidInvariants);
+	
+				} while (atLeastOneCandidateFailed);
 
-					List<Invariant> newInvariants = new ArrayList<>();
-					newInvariants.addAll(validInvariants);
-					newInvariants.addAll(candidateInvariants);
-					loopExtractor.setInvariants(newInvariants);
-					loopProgram = (Program) loopExtractor.visit(program);
-					
-					for(Invariant inv : newInvariants) {
-						//System.out.println(v.visit(inv.getExpr()));
-					}
-					
-					//System.out.println(new PrinterVisitor().visit(loopProgram));
-				} while (!invalidInvariants.isEmpty());
-
-				validInvariants.addAll(candidateInvariants);
-
-				for (Invariant i : validInvariants) {
-					//System.out.println(new PrinterVisitor().visit(i.getExpr()));
-				}
-
-				program = (Program) new HoudiniReassemblerVisitor(validInvariants).visit(program);
+				program = (Program) new HoudiniReassemblerVisitor(loopExtractor.getAllInvariants()).visit(program);
 			}
 		}
 		
