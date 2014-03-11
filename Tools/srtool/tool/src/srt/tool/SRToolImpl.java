@@ -8,6 +8,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import srt.ast.BinaryExpr;
+import srt.ast.DeclRef;
+import srt.ast.Expr;
+import srt.ast.IntLiteral;
+import srt.ast.Invariant;
+import srt.ast.Node;
 import srt.ast.Program;
 import srt.ast.visitor.impl.PrinterVisitor;
 import srt.exec.ProcessExec;
@@ -21,11 +27,74 @@ public class SRToolImpl implements SRTool {
 		this.program = p;
 		this.clArgs = clArgs;
 	}
+	
+	private void print(Node node) {
+		System.out.println(new PrinterVisitor().visit(node));
+	}
+	
+	private Invariant toInvariant(Expr expr) {
+		return new Invariant(true, expr);
+	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
 		
 		if (clArgs.mode.equals(CLArgs.INVGEN)) {
+			ComponentExtractorVisitor componentExtractor = new ComponentExtractorVisitor();
+			componentExtractor.visit(program);
 			
+			Set<String> variableNames = componentExtractor.getVariableNames();
+			Set<Integer> intLiterals = componentExtractor.getIntLiterals();
+			
+			intLiterals.add(0);  // 0 is good
+			
+			System.out.println("Variables:");
+			for (String variable : variableNames) {
+				System.out.println(variable);
+			}
+			
+			System.out.println("Int literals:");
+			for (Integer intLiteral : intLiterals) {
+				System.out.println(intLiteral);
+			}
+			
+			List<Invariant> commonInvariants = new ArrayList<>();
+			
+			// Generate all the things
+			for (String variableA : variableNames) {
+				DeclRef a = new DeclRef(variableA);
+				
+				for (String variableB : variableNames) {
+					if (variableA.equals(variableB)) {
+						continue;
+					}
+					
+					DeclRef b = new DeclRef(variableB);
+					
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, a, b)));
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, a, b)));
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, a, b)));
+				}
+				
+				for (Integer intLiteral : intLiterals) {
+					IntLiteral n = new IntLiteral(intLiteral);
+					
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, a, n)));
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, a, n)));
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, a, n)));
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, a, n)));
+					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, a, n)));
+				}
+			}
+			
+			for (Invariant i : commonInvariants) {
+				print(i.getExpr());
+			}
+			
+			program = (Program) new AddCandidateInvariantsVisitor(commonInvariants).visit(program);
+			
+			System.out.println(new PrinterVisitor().visit(program));
+			
+			System.out.println("---");
 		}
 
 		if (clArgs.mode.equals(CLArgs.HOUDINI) || clArgs.mode.equals(CLArgs.INVGEN)) {
