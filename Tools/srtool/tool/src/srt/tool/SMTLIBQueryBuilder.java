@@ -8,7 +8,6 @@ public class SMTLIBQueryBuilder {
 	private ExprToSmtlibVisitor exprConverter;
 	private CollectConstraintsVisitor constraints;
 	private String queryString = "";
-	private int ass = 0;
 
 	public SMTLIBQueryBuilder(CollectConstraintsVisitor ccv) {
 		this.constraints = ccv;

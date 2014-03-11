@@ -28,7 +28,7 @@ ONLY_REPORT_FAILURES=0
 #tester/tester_run.sh tests/houdini $ONLY_REPORT_FAILURES -mode houdini
 
 # Invariant generation tests
-#tester/tester_run.sh tests/invgen $ONLY_REPORT_FAILURES -mode invgen
+tester/tester_run.sh tests/invgen $ONLY_REPORT_FAILURES -mode invgen
 
 # Competition mode tests
 #tester/tester_run.sh tests/comp $ONLY_REPORT_FAILURES -mode comp

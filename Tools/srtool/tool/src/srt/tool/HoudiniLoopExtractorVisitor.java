@@ -1,25 +1,16 @@
 package srt.tool;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import srt.ast.AssertStmt;
-import srt.ast.AssumeStmt;
 import srt.ast.BlockStmt;
-import srt.ast.Decl;
-import srt.ast.DeclList;
-import srt.ast.IntLiteral;
 import srt.ast.Invariant;
 import srt.ast.InvariantList;
-import srt.ast.Program;
 import srt.ast.Stmt;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
-import srt.ast.visitor.impl.PrinterVisitor;
 
 public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     

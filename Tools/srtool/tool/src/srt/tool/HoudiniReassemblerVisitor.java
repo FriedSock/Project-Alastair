@@ -1,13 +1,8 @@
 package srt.tool;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import srt.ast.Invariant;
-import srt.ast.InvariantList;
-import srt.ast.Program;
-import srt.ast.Stmt;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
 

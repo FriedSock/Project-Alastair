@@ -2,27 +2,13 @@ package srt.tool;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-
-import srt.ast.BlockStmt;
-import srt.ast.Decl;
-import srt.ast.DeclList;
-import srt.ast.Invariant;
-import srt.ast.InvariantList;
 import srt.ast.Program;
-import srt.ast.Stmt;
-import srt.ast.StmtList;
-import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.PrinterVisitor;
 import srt.exec.ProcessExec;
 import srt.tool.exception.ProcessTimeoutException;
@@ -37,8 +23,12 @@ public class SRToolImpl implements SRTool {
 	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
+		
+		if (clArgs.mode.equals(CLArgs.INVGEN)) {
+			
+		}
 
-		if (clArgs.mode.equals(CLArgs.HOUDINI)) {
+		if (clArgs.mode.equals(CLArgs.HOUDINI) || clArgs.mode.equals(CLArgs.INVGEN)) {
     		// Extract all loops
 			HoudiniLoopExtractorVisitor loopExtractor = new HoudiniLoopExtractorVisitor();
 			Program loopProgram = (Program) loopExtractor.visit(program);
