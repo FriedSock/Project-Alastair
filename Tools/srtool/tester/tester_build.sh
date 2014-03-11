@@ -1,3 +1,3 @@
 #!/bin/bash
-javac -target 1.6 -source 1.6 -cp src -d bin -s bin src/srtester/*.java
+javac -target 1.7 -source 1.7 -cp src -d bin -s bin src/srtester/*.java
 

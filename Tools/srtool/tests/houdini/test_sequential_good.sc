@@ -19,5 +19,14 @@ void main()
 
  assert(i == iterations);
 
+ while(i > 0)
+   cand(i > -1)
+   cand(i == 1000)
+ {
+   i = i - 1;
+ }
+
+ assert(i == 0);
+
 }
 
