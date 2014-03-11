@@ -1,0 +1,33 @@
+\documentclass[11pt]{article}
+
+\title{Software Reliability -- Coursework 2 \\ Software Reliability Tools}
+\author{Jack Bracewell, Milan Misak, Craig Ellis}
+\date{}
+
+\usepackage{float}
+\usepackage[margin=1.5in]{geometry}
+
+\begin{document}
+
+\maketitle
+
+\section{SMT Formula Generation (maybe not this section?)}
+\section{SSA Renaming}
+
+This task was reasonably straighforward, though we did run into a few small issues when we implemented later tasks, and we had to return and handle some edge cases in the \verb|SSAVisitor| class. These were mainly to do with variables we introduced in predication, and the `free' variables we introduced when handling \verb|havoc| statements.
+
+In terms of implementation, we simply kept a record (using a \verb|Map|) of the current number of assignments to each variable, starting with 0 when the variable is declared. We then just needed to append the character `\$', and this recorded number every time we encountered a reference to the variable. Upon reaching an assignment statement, we first handled the right-hand side of the assignment \emph{before} incrementing assignment count - to account for cases where the assignment may reference the variable itself (eg. \verb|x = x + 1|).
+
+The problems we encountered with the variables we had introduced were solved with a check for the character `\$', which we would use in our variables.
+
+\section{Predication}
+
+
+
+\section{Bounded Model Checking}
+\section{Verifier Mode}
+\section{Houdini Mode}
+\section{Invgen Mode}
+\section{Competition Mode}
+
+\end{document}
