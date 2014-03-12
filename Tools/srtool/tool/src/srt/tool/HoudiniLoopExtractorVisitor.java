@@ -11,7 +11,6 @@ import srt.ast.InvariantList;
 import srt.ast.Stmt;
 import srt.ast.WhileStmt;
 import srt.ast.visitor.impl.DefaultVisitor;
-import srt.ast.visitor.impl.PrinterVisitor;
 
 public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     
@@ -42,19 +41,19 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
         	candidateLoopInvariants.add(candidates);
     	}
     	
-    	/* System.out.println("loopInvariants");
+    	System.out.println("loopInvariants");
     	for (List<Invariant> l : loopInvariants) {
     		for (Invariant i : l) {
-    			System.out.println(new PrinterVisitor().visit(i.getExpr()));
+    			System.out.println(new srt.ast.visitor.impl.PrinterVisitor().visit(i.getExpr()));
     		}
     	}
 
     	System.out.println("candidateLoopInvariants");
     	for (List<Invariant> l : candidateLoopInvariants) {
     		for (Invariant i : l) {
-    			System.out.println(new PrinterVisitor().visit(i.getExpr()));
+    			System.out.println(new srt.ast.visitor.impl.PrinterVisitor().visit(i.getExpr()));
     		}
-    	}*/
+    	}
     	
     	// Set new id for next loop to be visited
     	int localId = id++;

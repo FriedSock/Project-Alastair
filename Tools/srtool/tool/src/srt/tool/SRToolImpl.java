@@ -8,12 +8,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import srt.ast.BinaryExpr;
-import srt.ast.DeclRef;
-import srt.ast.Expr;
-import srt.ast.IntLiteral;
 import srt.ast.Invariant;
-import srt.ast.Node;
 import srt.ast.Program;
 import srt.ast.visitor.impl.PrinterVisitor;
 import srt.exec.ProcessExec;
