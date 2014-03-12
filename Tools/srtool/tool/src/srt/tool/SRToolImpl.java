@@ -27,14 +27,6 @@ public class SRToolImpl implements SRTool {
 		this.program = p;
 		this.clArgs = clArgs;
 	}
-	
-	private void print(Node node) {
-		System.out.println(new PrinterVisitor().visit(node));
-	}
-	
-	private Invariant toInvariant(Expr expr) {
-		return new Invariant(true, expr);
-	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
 		
@@ -44,42 +36,7 @@ public class SRToolImpl implements SRTool {
 			
 			Set<String> variableNames = componentExtractor.getVariableNames();
 			Set<Integer> intLiterals = componentExtractor.getIntLiterals();
-			
-			intLiterals.add(0);  // 0 is good
-
-			List<Invariant> commonInvariants = new ArrayList<>();
-			
-			// Generate all the things
-			for (String variableA : variableNames) {
-				DeclRef a = new DeclRef(variableA);
-				
-				for (String variableB : variableNames) {
-					if (variableA.equals(variableB)) {
-						continue;
-					}
-					
-					DeclRef b = new DeclRef(variableB);
-					
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, a, b)));
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, a, b)));
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, a, b)));
-				}
-				
-				for (Integer intLiteral : intLiterals) {
-					IntLiteral n = new IntLiteral(intLiteral);
-					
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, a, n)));
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, a, n)));
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, a, n)));
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, a, n)));
-					commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, a, n)));
-				}
-				
-				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("i"), new IntLiteral(300))));
-				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("j"), new IntLiteral(300))));
-				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("k"), new IntLiteral(200))));
-				commonInvariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("l"), new IntLiteral(200))));
-			}
+			List<Invariant> commonInvariants = InvariantGenerator.generate(variableNames, intLiterals);
 			
 			program = (Program) new AddCandidateInvariantsVisitor(commonInvariants).visit(program);
 		}
