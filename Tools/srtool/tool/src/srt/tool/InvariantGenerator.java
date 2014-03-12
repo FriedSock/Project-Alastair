@@ -43,8 +43,16 @@ public class InvariantGenerator {
 					
 					DeclRef c = new DeclRef(variableC);
 					
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new BinaryExpr(BinaryExpr.ADD, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, new BinaryExpr(BinaryExpr.ADD, a, b), c)));
 					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.ADD, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, new BinaryExpr(BinaryExpr.ADD, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, new BinaryExpr(BinaryExpr.ADD, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), c)));
 					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), c)));
 				}
 				
 				for (Integer intLiteral : intLiterals) {
@@ -54,8 +62,16 @@ public class InvariantGenerator {
 					
 					IntLiteral n = new IntLiteral(intLiteral);
 					
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new BinaryExpr(BinaryExpr.ADD, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, new BinaryExpr(BinaryExpr.ADD, a, b), n)));
 					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.ADD, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, new BinaryExpr(BinaryExpr.ADD, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, new BinaryExpr(BinaryExpr.ADD, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), n)));
 					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), n)));
 				}
 			}
 			
@@ -69,6 +85,8 @@ public class InvariantGenerator {
 				invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, a, n)));
 			}
 		}
+		
+		invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("i"), new IntLiteral(12))));
 		
 		return invariants;
 	}

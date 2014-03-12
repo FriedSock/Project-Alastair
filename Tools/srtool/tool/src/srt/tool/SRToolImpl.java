@@ -25,7 +25,6 @@ public class SRToolImpl implements SRTool {
 			
 			List<Callable<RunnerResult>> tasks = new ArrayList<>();
 			tasks.add(new Runner(program, createArgs(CLArgs.VERIFIER)));
-			tasks.add(new Runner(program, createArgs(CLArgs.BMC, true)));
 			tasks.add(new Runner(program, createArgs(CLArgs.BMC, false)));
 			tasks.add(new Runner(program, createArgs(CLArgs.HOUDINI)));
 			tasks.add(new Runner(program, createArgs(CLArgs.INVGEN)));
@@ -35,10 +34,24 @@ public class SRToolImpl implements SRTool {
 			for (Callable<RunnerResult> task : tasks) { 
 			    ecs.submit(task);
 			}
+			
+			int incorrect = 0;
 			for (int i = 0; i < tasks.size(); i++) {
 				try {
-					RunnerResult result = ecs.take().get();
-					System.out.println(result.result + " (" + result.clArgs.mode + " " + result.clArgs.unsoundBmc + ")");
+					RunnerResult taskResult = ecs.take().get();
+					String mode = taskResult.clArgs.mode;
+					SRToolResult result = taskResult.result;
+					
+					System.out.println(result + " (" + mode + ")");
+					
+					if (result == SRToolResult.CORRECT) {
+						return SRToolResult.CORRECT;
+					} else if (result == SRToolResult.INCORRECT) {
+						incorrect++;
+						if (incorrect > 3) {
+							return SRToolResult.INCORRECT;
+						}
+					}					
 				} catch (ExecutionException e) {
 					e.printStackTrace();
 				}
@@ -64,6 +77,7 @@ public class SRToolImpl implements SRTool {
 			CLArgs args = clArgs.clone();
 			args.mode = mode;
 			args.unsoundBmc = unsoundBMC;
+			args.unwindDepth = 108;
 			args.verbose = false;  // Override verbosity
 			return args;
 		} catch (CloneNotSupportedException e) {
