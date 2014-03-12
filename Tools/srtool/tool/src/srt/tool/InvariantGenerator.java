@@ -68,11 +68,6 @@ public class InvariantGenerator {
 				invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GEQ, a, n)));
 				invariants.add(toInvariant(new BinaryExpr(BinaryExpr.GT, a, n)));
 			}
-			
-			invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("i"), new IntLiteral(300))));
-			invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("j"), new IntLiteral(300))));
-			invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("k"), new IntLiteral(200))));
-			invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, new DeclRef("l"), new IntLiteral(200))));
 		}
 		
 		return invariants;
