@@ -35,6 +35,28 @@ public class InvariantGenerator {
 				invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LT, a, b)));
 				invariants.add(toInvariant(new BinaryExpr(BinaryExpr.LEQ, a, b)));
 				invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, a, b)));
+				
+				for (String variableC : variableNames) {
+					if (variableC.equals(variableA) || variableC.equals(variableB)) {
+						continue;
+					}
+					
+					DeclRef c = new DeclRef(variableC);
+					
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.ADD, a, b), c)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), c)));
+				}
+				
+				for (Integer intLiteral : intLiterals) {
+					if (intLiteral == 0) {
+						continue;
+					}
+					
+					IntLiteral n = new IntLiteral(intLiteral);
+					
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.ADD, a, b), n)));
+					invariants.add(toInvariant(new BinaryExpr(BinaryExpr.EQUAL, new BinaryExpr(BinaryExpr.SUBTRACT, a, b), n)));
+				}
 			}
 			
 			for (Integer intLiteral : intLiterals) {
