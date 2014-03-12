@@ -13,8 +13,6 @@
 
 \maketitle
 
-\section{SMT Formula Generation (maybe not this section?)}
-
 \section{SSA Renaming}
 
 This task was reasonably straightforward, though we did run into a few small issues when we implemented later tasks, and we had to return and handle some edge cases in the \verb|SSAVisitor| class. These were mainly to do with variables we introduced in predication, and the `free' variables we introduced when handling \verb|havoc| statements. \\
@@ -140,11 +138,11 @@ We decided to simply compute the invariants of all loops simultaneously, even th
 
 \section{Invgen Mode}
 
-Our invariant generation algorithm is reasonably smart, in that the integers it considers are only the ones which appear in the program itself (unlike the more ``brute force'' approach seen in lectures, and TODO: in Daikon? This was pretty easy to implement - as the visitor parses the program to find variable names, it also picks up any integers. This works well for our simple examples, though we have also included a invariant addition and subtraction template to cope with some of the cases where our approach might not be enough. \\
+Our invariant generation algorithm is reasonably smart, in that the integers it considers are only the ones which appear in the program itself (unlike the more ``brute force'' approach seen in lectures. This was pretty easy to implement - as the visitor parses the program to find variable names, it also picks up any integers. This works well for our simple examples, though we have also included a invariant addition and subtraction template to cope with some of the cases where our approach might not be enough. \\
 
 Another way we managed to speed up the invariant generation slightly was by generating likely invariants only once, and using this as the starting set for every loop. Since all variable declarations are made at the very beginning of a program, they will all always be in scope. As stated, this decision speeds up invariant generation, but it also slows down Houdini elimination due to the large number of invariants. It may also leave superfluous invariants (ie. those which include variables not touched within a loop), though these might be useful to know in a nested loop when trying to verify the outer loop. \\
 
-We were not able to optimise this mode to any great degree, partly due to the nature of the simple C language. For example, we cannot eliminate candidate invariants with mismatched types, because there is only one type for variables in the language. We considered reducing the number of invariants generated through suppression of weaker invariants, and finding dynamically constant variables. However, in the end we decided that the time spent finding these invariants would likely be greater than the time houdini would spend running the program with one or two more candidates. Since the invariants would likely not even be seen by a user, returning faster but with unnecessary invariants seems like a fair tradeoff. TODO: does it, though? \\
+We were not able to optimise this mode to any great degree, partly due to the nature of the simple C language. For example, we cannot eliminate candidate invariants with mismatched types, because there is only one type for variables in the language. We considered reducing the number of invariants generated through suppression of weaker invariants, and finding dynamically constant variables. However, in the end we decided that the time spent finding these invariants would likely be greater than the time Houdini would spend running the program with one or two more candidates. Since the invariants would likely not even be seen by a user, returning faster but with unnecessary invariants seems like a fair tradeoff. \\
 
 \section{Competition Mode}
 
