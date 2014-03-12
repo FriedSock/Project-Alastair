@@ -17,44 +17,79 @@
 
 \section{SSA Renaming}
 
-This task was reasonably straightforward, though we did run into a few small issues when we implemented later tasks, and we had to return and handle some edge cases in the \verb|SSAVisitor| class. These were mainly to do with variables we introduced in predication, and the `free' variables we introduced when handling \verb|havoc| statements.
+This task was reasonably straightforward, though we did run into a few small issues when we implemented later tasks, and we had to return and handle some edge cases in the \verb|SSAVisitor| class. These were mainly to do with variables we introduced in predication, and the `free' variables we introduced when handling \verb|havoc| statements. \\
 
-In terms of implementation, we simply kept a record (using a \verb|Map|) of the current number of assignments to each variable, starting with 0 when the variable is declared. We then just needed to append the character `\$', and this recorded number every time we encountered a reference to the variable. Upon reaching an assignment statement, we first handled the right-hand side of the assignment \emph{before} incrementing assignment count - to account for cases where the assignment may reference the variable itself (eg. \verb|x = x + 1|).
+In terms of implementation, we simply kept a record (using a \verb|Map|) of the current number of assignments to each variable, starting with 0 when the variable is declared. We then just needed to append the character `\$', and this recorded number every time we encountered a reference to the variable. Upon reaching an assignment statement, we first handled the right-hand side of the assignment \emph{before} incrementing assignment count - to account for cases where the assignment may reference the variable itself (eg. \verb|x = x + 1|). \\
 
-The problems we encountered with the variables we had introduced were solved with a check for the character `\$', which we would use in our variables.
+The problems we encountered with the variables we had introduced were solved with a check for the character `\$', which we would use in our variables. \\
 
 \section{Predication}
 
-The workhorse in our implementation of Predicated Execution is our scope stack. This stack initially contains the Global predicate, then each time a conditional is entered, the predicate for its satisfaction is pushed onto the stack. Similarly, when the conditional body is left this Predicate is popped off the stack.
+The workhorse in our implementation of Predicated Execution is our scope stack. This stack initially contains the Global predicate, then each time a conditional is entered, the predicate for its satisfaction is pushed onto the stack. Similarly, when the conditional body is left this Predicate is popped off the stack. Pushing the Global Predicate to the stack initially has allowed us to simply \verb|peek| at the top element when predicating a statement. \\
 
-Pushing the Global Predicate to the stack initially allows us to simply \verb|peek| at the top element when predicating a statement.
+Every assignment statement (including those of new predicates), is predicated using the ternary operator with both the latest version of the global predicate and the conditional predicate on the top of our scope stack. If the predicate fails, then the assignment will return the original variable value (equivalent to a no-op), otherwise the assignment will succeed. \\
 
-Every assignment statement (including those of new predicates), is predicated using the ternary operator with both the latest version of the global predicate and the conditional predicate on the top of our scope stack. If the predicate fails, then the assignment will return the original variable value (equivalent to a no-op), otherwise the assignment will succeed.
+As previously stated, when we predicate a statement we use both the global predicate and the predicate on top of the stack - even though the topmost predicate should include the global predicate anyway. This is to take into account any \verb|assume| statements we encounter inside a conditional branch. The \verb|assume| will change the global predicate, and we decided that it was much less complicated to simply include both predicates instead of altering everything in the stack. As a consequence of this, when we are not in a conditional branch the predicate is duplicated (eg. \verb|(G$0 && G$0)|), though this does not affect the outcome. \\
 
-As previously stated, when we predicate a statement we use both the global predicate and the predicate on top of the stack - even though the topmost predicate should include the global predicate anyway. This is to take into account any \verb|assume| statements we encounter inside a conditional branch. The \verb|assume| will change the global predicate, and we decided that it was much less complicated to simply include both predicates instead of altering everything in the stack. As a consequence of this, when we are not in a conditional branch the predicate is duplicated (eg. \verb|(G$0 && G$0)|), though this does not affect the outcome.
-
-TODO: Talk about \verb|havoc()| and \verb|assume()|
+Converting the \verb|havoc| and \verb|assume| statements created when abstracting a loop was reasonably simple, and happens as explained in the notes. We use the `\$' character in any new variables we create (eg. \verb|h$0| from \verb|havoc|), to solve the problem as explained in the SSA Renaming section. \\
 
 \section{Bounded Model Checking}
 
-Did we do anything extra than the notes?
+We didn't find this section too difficult, though we created problems for ourselves initially, by misplacing the final assertion when we unwound a loop. In the case that a bound of 0 is specified, all we do is assert the loop invariants, then assume false in the case that the condition holds (adding assertions if we are using sound checking), and we never even look at the body. This follows the pattern as shown below: \\
+
+\clearpage
+
+Unwind x 2:
+\begin{verbatim}
+  assert(invariants)
+  if (c) {
+    assert(invariants)
+    if (c) {
+      assert(invariants)
+      if (c) {
+        assert(invariants)
+        assume(false);
+      }
+    }
+  }
+\end{verbatim}
+
+\vspace{\baselineskip}
+
+Unwind x 1:
+\begin{verbatim}
+  assert(invariants)
+  if (c) {
+    assert(invariants)
+    if (c) {
+      assert(invariants)
+      assume(false);
+    }
+  }
+\end{verbatim}
+
+\vspace{\baselineskip}
+
+Unwind x 0:
+\begin{verbatim}
+  assert(invariants)
+  if (c) {
+    assert(invariants)
+    assume(false);
+  }
+\end{verbatim}
+
+Another problem that we encountered while testing was the unwinding of loops a very large number of times. This causes drastic slowdown, and eventually a stack overflow with a large enough number. This needs to be in the range of 300 or so, which means it is unlikely to be encountered with a user who knows what they're doing (when a loop would need to be unwound this many times, other options such as the verifier mode are much more suitable). \\
 
 \section{Verification Mode}
 
-Did we do anything extra than the notes?
+This section we also had little difficulty in implementing, proceeding in almost exactly the same way as laid out in the slides. We did briefly wonder about whether or not we should account for the user-supplied invariants being incorrect, but decided in the end that if a user was unsure about the invariants, something like Houdini would be used instead. Because of this, we could also simplify our code for Houdini to some small degree, allowing Houdini to just execute the verifier code once it had pruned the candidate invariants. \\
 
-For Houdini we decided to compute invariant fixed points for all the loops in the program simultaneously.
-We made this decision because only top-level sequential loop invariants would not \emph{need} to be proved
-this way. Wheras any loop nested inside another loop would have co-dependent invariants with its parent. \\
+\section{Houdini Mode}
 
-If we take look at Figure 1 for example. We have five loops, with loops \verb|1|, \verb|2| and \verb|5| occuring
-sequentially on the top level, and loops \verb|3| and \verb|4| nested inside loop \verb|2|. We can compute
-invariants for loop \verb|1| without any of the other loops, because its invariants are not dependent on any
-others. But the invariants for loop \verb|2|, \verb|3| and \verb|4| need to be computed simultaneously, because
-they are part of a cycle in the invariant dependency graph. We could then compute invariants for loop \verb|5|
-in isolation. \\
+Houdini was the section we had the most difficulty with, going through a few iterations before we settled on a solution. In the end, we decided to compute invariant fixed points for all the loops in the program simultaneously. We made this decision because only top-level sequential loop invariants would not \emph{need} to be proved this way. Whereas any loop nested inside another loop would have co-dependent invariants with its parent. \\
 
-
+If we take look at Figure 1 for example, we have five loops, with loops \verb|1|, \verb|2| and \verb|5| occurring sequentially on the top level, and loops \verb|3| and \verb|4| nested inside loop \verb|2|. We can compute invariants for loop \verb|1| without any of the other loops, because its invariants are not dependent on any others. But the invariants for loop \verb|2|, \verb|3| and \verb|4| need to be computed simultaneously, because they are part of a cycle in the invariant dependency graph. We could then compute invariants for loop \verb|5| in isolation. \\
 
 \begin{figure}[H]
 \begin{center}
@@ -101,24 +136,18 @@ in isolation. \\
 \caption{An example simpleC program containing a number of while loops, and the corresponding invariant dependency graph}
 \end{figure}
 
-We decided to simply compute the invariants of all loops simultaneously, even though this would mean spending more
-time in the sat solver (5 sets of loop invariants to compute, and worse case exponential complexity of SAT solver).
-In practice, for small simpleC programs the overhead required to compute the dependency graph, and run through multiple
-fixed point computations would take longer than the time saved in the SAT solver, especially since exponential is worst
-case complexity, and will be much lower in practice.
-
-\subsection{Nested Loops}
-
-When proving invariants of nested loops, we must verify the outer loop simultaneously with any interior loops. This is because the invariants of each loop are dependent on each other. (This gon be reel complicated)
+We decided to simply compute the invariants of all loops simultaneously, even though this would mean spending more time in the sat solver (5 sets of loop invariants to compute, and worse case exponential complexity of SAT solver). In practice, for small simpleC programs the overhead required to compute the dependency graph, and run through multiple fixed point computations would take longer than the time saved in the SAT solver, especially since exponential is worst case complexity, and will be much lower in practice. \\
 
 \section{Invgen Mode}
 
-Our invariant generation algorithm is reasonably smart, in that the integers it considers are only the ones which appear in the program itself (unlike the more `brute force' approach seen in lectures, and TODO: in Daikon? This was pretty easy to impliment - as the visitor parses the program to find variable names, it also picks up any integers. This works well for our simple examples, though we have also included a invariant addition and subtraction template to cope with some of the cases where our approach might not be enough.
+Our invariant generation algorithm is reasonably smart, in that the integers it considers are only the ones which appear in the program itself (unlike the more ``brute force'' approach seen in lectures, and TODO: in Daikon? This was pretty easy to implement - as the visitor parses the program to find variable names, it also picks up any integers. This works well for our simple examples, though we have also included a invariant addition and subtraction template to cope with some of the cases where our approach might not be enough. \\
 
-We were not able to optimise this mode to any great degree, partly due to the nature of the simple C language. For example, we cannot eliminate candidate invariants with mismatched types, because there is only one type for variables in the language. We considered reducing the number of invariants generated through suppression of weaker invariants, and finding dynamically constant variables. However, in the end we decided that the time spent finding these invariants would likely be greater than the time houdini would spend running the program with one or two more candidates. Since the invariants would likely not even be seen by a user, returning faster but with unnecessary invariants seems like a fair tradeoff. TODO: does it, though?
+We were not able to optimise this mode to any great degree, partly due to the nature of the simple C language. For example, we cannot eliminate candidate invariants with mismatched types, because there is only one type for variables in the language. We considered reducing the number of invariants generated through suppression of weaker invariants, and finding dynamically constant variables. However, in the end we decided that the time spent finding these invariants would likely be greater than the time houdini would spend running the program with one or two more candidates. Since the invariants would likely not even be seen by a user, returning faster but with unnecessary invariants seems like a fair tradeoff. TODO: does it, though? \\
 
 \section{Competition Mode}
 
-Not done it yet.
+Our competition mode runs every algorithm at once (with the exception of unsound Bounded Model Checking), and will return \verb|CORRECT| if any of the algorithms reports \verb|CORRECT|. However, every algorithm must return \verb|INCORRECT| in order for that to be the final result - this is due to the \emph{verification} soundness of each model. This means that some algorithms may report a bug where there is none - but if they return correct, then the code is definitely bug-free. We exclude unsound BMC from our tests for exactly this reason - we would not be able to trust its result either way. \\
+
+As a result of trusting these algorithms, there is a risk of returning false negatives. However, we do ensure that we never return a false positive. False positives are much less desirable to a user - it is more preferable to return nonexistent bugs (which a user can manually eliminate) than to report no bugs when bugs exist (giving the user no useful information, and forcing them to blindly trust in the program). \\
 
 \end{document}
