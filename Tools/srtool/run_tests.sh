@@ -14,9 +14,9 @@ ONLY_REPORT_FAILURES=0
 #tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode verifier
 #tester/tester_run.sh tests/verifier $ONLY_REPORT_FAILURES -mode verifier
 #tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode houdini
-tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode invgen
+#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode invgen
 # Uncomment if you implement comp
-#tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode comp
+tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode comp
 
 # BMC sound tests
 #tester/tester_run.sh tests/bmc_sound $ONLY_REPORT_FAILURES -mode bmc
@@ -28,8 +28,8 @@ tester/tester_run.sh tests/loopfree $ONLY_REPORT_FAILURES -mode invgen
 #tester/tester_run.sh tests/houdini $ONLY_REPORT_FAILURES -mode houdini
 
 # Invariant generation tests
-tester/tester_run.sh tests/invgen $ONLY_REPORT_FAILURES -mode invgen
+#tester/tester_run.sh tests/invgen $ONLY_REPORT_FAILURES -mode invgen
 
 # Competition mode tests
-#tester/tester_run.sh tests/comp $ONLY_REPORT_FAILURES -mode comp
+tester/tester_run.sh tests/comp $ONLY_REPORT_FAILURES -mode comp
 

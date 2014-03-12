@@ -5,9 +5,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.antlr.runtime.tree.Tree;
-
-import srt.ast.*;
+import srt.ast.BlockStmt;
+import srt.ast.Decl;
+import srt.ast.DeclRef;
+import srt.ast.Node;
+import srt.ast.NodeInfo;
+import srt.ast.Program;
 
 /**
  * This class uses a Visitor to check that
