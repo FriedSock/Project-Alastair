@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,27 +16,22 @@ import srt.exec.ProcessExec;
 import srt.tool.SRTool.SRToolResult;
 import srt.tool.exception.ProcessTimeoutException;
 
-public class Runner implements Runnable {
+public class Runner implements Callable<RunnerResult> {
 	
 	private Program program;
 	private final CLArgs clArgs;
-	private SRToolResult result = SRToolResult.UNKNOWN;
-	
+
 	public Runner(Program program, CLArgs clArgs) {
 		this.program = program;
 		this.clArgs = clArgs;
 	}
 
 	@Override
-	public void run() {
-		try {
-			result = execute();
-		} catch (InterruptedException | IOException e) {
-			// use default result
-		}
+	public RunnerResult call() throws Exception {
+		return execute();
 	}
 	
-	private SRToolResult execute() throws InterruptedException, IOException {
+	private RunnerResult execute() throws InterruptedException, IOException {
 		if (clArgs.mode.equals(CLArgs.INVGEN)) {
 			ComponentExtractorVisitor componentExtractor = new ComponentExtractorVisitor();
 			componentExtractor.visit(program);
@@ -82,7 +78,7 @@ public class Runner implements Runnable {
 					String queryResult = solve(smtQuery);
 					
 					if (queryResult == null) {
-						return SRToolResult.UNKNOWN;
+						return result(SRToolResult.UNKNOWN);
 					}
 					
 					if (!queryResult.startsWith("unsat")) {
@@ -151,7 +147,7 @@ public class Runner implements Runnable {
 
 		String queryResult = solve(smtQuery);
 		if (queryResult == null) {
-			return SRToolResult.UNKNOWN;
+			return result(SRToolResult.UNKNOWN);
 		}
 
 		// output query result for debugging
@@ -160,19 +156,15 @@ public class Runner implements Runnable {
 		}
 
 		if (queryResult.startsWith("unsat")) {
-			return SRToolResult.CORRECT;
+			return result(SRToolResult.CORRECT);
 		}
 
 		if (queryResult.startsWith("sat")) {
-			return SRToolResult.INCORRECT;
+			return result(SRToolResult.INCORRECT);
 		}
 		
 		// query result started with something other than "sat" or "unsat"
-		return SRToolResult.UNKNOWN;
-	}
-	
-	public SRToolResult getResult() {
-		return result;
+		return result(SRToolResult.UNKNOWN);
 	}
 	
 	private String buildSMTQuery(Program program)  {
@@ -201,4 +193,7 @@ public class Runner implements Runnable {
 		}
 	}
 
+	private RunnerResult result(SRToolResult result) {
+		return new RunnerResult(result, clArgs);
+	}
 }
