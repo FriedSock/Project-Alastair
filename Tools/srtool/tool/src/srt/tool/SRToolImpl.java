@@ -24,7 +24,11 @@ public class SRToolImpl implements SRTool {
 	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
-		if (clArgs.mode.equals(CLArgs.INVGEN)) {
+		Runner runner = new Runner(program, clArgs);
+		runner.run();
+		return runner.getResult();
+		
+		/*if (clArgs.mode.equals(CLArgs.INVGEN)) {
 			ComponentExtractorVisitor componentExtractor = new ComponentExtractorVisitor();
 			componentExtractor.visit(program);
 			
@@ -156,6 +160,7 @@ public class SRToolImpl implements SRTool {
 		}
 		// query result started with something other than "sat" or "unsat"
 		return SRToolResult.UNKNOWN;
+		*/
 	}
 	
 	private String buildSMTQuery(Program program)  {
