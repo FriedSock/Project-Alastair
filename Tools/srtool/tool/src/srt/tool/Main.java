@@ -54,6 +54,8 @@ public class Main {
 		
 		// output result: "correct", "incorrect" or "unknown"
 		System.out.println(result.toString().toLowerCase());
+		
+		System.exit(0);
 	}
 
 }
