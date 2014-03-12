@@ -39,7 +39,7 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     		loopInvariants.add(invariants);
         	candidateLoopInvariants.add(candidates);
     	}
-    	
+
     	// Set new id for next loop to be visited
     	int localId = id++;
 
