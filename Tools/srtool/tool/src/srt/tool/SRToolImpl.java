@@ -39,10 +39,7 @@ public class SRToolImpl implements SRTool {
 			for (int i = 0; i < tasks.size(); i++) {
 				try {
 					RunnerResult taskResult = ecs.take().get();
-					String mode = taskResult.clArgs.mode;
 					SRToolResult result = taskResult.result;
-					
-					System.out.println(result + " (" + mode + ")");
 					
 					if (result == SRToolResult.CORRECT) {
 						return SRToolResult.CORRECT;
@@ -77,7 +74,7 @@ public class SRToolImpl implements SRTool {
 			CLArgs args = clArgs.clone();
 			args.mode = mode;
 			args.unsoundBmc = unsoundBMC;
-			args.unwindDepth = 108;
+			args.unwindDepth = 100;
 			args.verbose = false;  // Override verbosity
 			return args;
 		} catch (CloneNotSupportedException e) {
