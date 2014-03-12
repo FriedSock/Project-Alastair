@@ -5,7 +5,9 @@
 \date{}
 
 \usepackage{float}
+\usepackage{tikz}
 \usepackage[margin=1.5in]{geometry}
+\usepackage[ruled, linesnumbered]{algorithm2e}
 
 \begin{document}
 
@@ -41,13 +43,69 @@ Did we do anything extra than the notes?
 
 Did we do anything extra than the notes?
 
-\section{Houdini Mode}
+For Houdini we decided to compute invariant fixed points for all the loops in the program simultaneously.
+We made this decision because only top-level sequential loop invariants would not \emph{need} to be proved
+this way. Wheras any loop nested inside another loop would have co-dependent invariants with its parent. \\
 
-For our implementation of Houdini we decided to translate each of the loops in the program, into its own program which we then run the loop verification functionality of the tool on. This involved an inserting an \verb|assert(0)| after the loop had finished (because we don't care about what happens in the program after this loop). We did, however, need to care about all statements before the loop starts, so we can know if the loop invariants hold the first time the loop head is reached.
+If we take look at Figure 1 for example. We have five loops, with loops \verb|1|, \verb|2| and \verb|5| occuring
+sequentially on the top level, and loops \verb|3| and \verb|4| nested inside loop \verb|2|. We can compute
+invariants for loop \verb|1| without any of the other loops, because its invariants are not dependent on any
+others. But the invariants for loop \verb|2|, \verb|3| and \verb|4| need to be computed simultaneously, because
+they are part of a cycle in the invariant dependency graph. We could then compute invariants for loop \verb|5|
+in isolation. \\
 
-After the verifier had been run on a while loop for the first time, we need to check which of the candidate invariants failed. This required renaming the \verb|assert| statements in our SMT formula that corresponded to each candidate invariant.
 
-TODO: Give an example
+
+\begin{figure}[H]
+\begin{center}
+  \begin{minipage}[b]{.4\textwidth}
+    \begin{algorithm}[H]
+    main() {
+
+    int i;
+    int j;
+    i = 0;
+    j = 0;
+
+    \While{i \textless 1 \tcp*{loop 1}} {
+        i = 1;
+    }
+
+    \While{i \textless 5 \tcp*{loop 2}}
+    {
+      \While{j \textless 1 \tcp*{loop 3}} {
+            j = j + 1;
+        }
+        j = j;
+
+        \While{j \textless 0 \tcp*{loop 4}} {
+            i = i + 1;
+            j = j - 1;
+        }
+    }
+
+    \While{i \textless 0 \tcp*{loop 5}} {
+        i = i - 1;
+    }
+
+    assert(i == 0);
+    }
+    \caption{Example multi-loop program}
+    \end{algorithm}
+  \end{minipage}
+  \quad \quad \quad \quad \quad \quad \quad \quad
+  \begin{minipage}[H]{.3\textwidth}
+    \input{./graph.tex}
+  \end{minipage}
+\end{center}
+\caption{An example simpleC program containing a number of while loops, and the corresponding invariant dependency graph}
+\end{figure}
+
+We decided to simply compute the invariants of all loops simultaneously, even though this would mean spending more
+time in the sat solver (5 sets of loop invariants to compute, and worse case exponential complexity of SAT solver).
+In practice, for small simpleC programs the overhead required to compute the dependency graph, and run through multiple
+fixed point computations would take longer than the time saved in the SAT solver, especially since exponential is worst
+case complexity, and will be much lower in practice.
 
 \subsection{Nested Loops}
 
@@ -55,7 +113,9 @@ When proving invariants of nested loops, we must verify the outer loop simultane
 
 \section{Invgen Mode}
 
-After knowing which invariants failed, we then iteratively ran the verifier, removing failed invariants each time until we reached a fixed point.
+Our invariant generation algorithm is reasonably smart, in that the integers it considers are only the ones which appear in the program itself (unlike the more `brute force' approach seen in lectures, and TODO: in Daikon? This was pretty easy to impliment - as the visitor parses the program to find variable names, it also picks up any integers. This works well for our simple examples, though we have also included a invariant addition and subtraction template to cope with some of the cases where our approach might not be enough.
+
+We were not able to optimise this mode to any great degree, partly due to the nature of the simple C language. For example, we cannot eliminate candidate invariants with mismatched types, because there is only one type for variables in the language. We considered reducing the number of invariants generated through suppression of weaker invariants, and finding dynamically constant variables. However, in the end we decided that the time spent finding these invariants would likely be greater than the time houdini would spend running the program with one or two more candidates. Since the invariants would likely not even be seen by a user, returning faster but with unnecessary invariants seems like a fair tradeoff. TODO: does it, though?
 
 \section{Competition Mode}
 
