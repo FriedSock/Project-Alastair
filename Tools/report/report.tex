@@ -55,7 +55,9 @@ When proving invariants of nested loops, we must verify the outer loop simultane
 
 \section{Invgen Mode}
 
-After knowing which invariants failed, we then iteratively ran the verifier, removing failed invariants each time until we reached a fixed point.
+Our invariant generation algorithm is reasonably smart, in that the integers it considers are only the ones which appear in the program itself (unlike the more `brute force' approach seen in lectures, and TODO: in Daikon? This was pretty easy to impliment - as the visitor parses the program to find variable names, it also picks up any integers. This works well for our simple examples, though we have also included a invariant addition and subtraction template to cope with some of the cases where our approach might not be enough.
+
+We were not able to optimise this mode to any great degree, partly due to the nature of the simple C language. For example, we cannot eliminate candidate invariants with mismatched types, because there is only one type for variables in the language. We considered reducing the number of invariants generated through suppression of weaker invariants, and finding dynamically constant variables. However, in the end we decided that the time spent finding these invariants would likely be greater than the time houdini would spend running the program with one or two more candidates. Since the invariants would likely not even be seen by a user, returning faster but with unnecessary invariants seems like a fair tradeoff. TODO: does it, though?
 
 \section{Competition Mode}
 
