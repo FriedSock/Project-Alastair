@@ -19,7 +19,6 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     private List<List<Invariant>> loopInvariants = new ArrayList<>();
     
     private boolean firstPass = true;
-    //private List<Invariant> invariants = null;
 
 	public HoudiniLoopExtractorVisitor() {
 		super(true);
@@ -40,21 +39,7 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     		loopInvariants.add(invariants);
         	candidateLoopInvariants.add(candidates);
     	}
-    	
-    	System.out.println("loopInvariants");
-    	for (List<Invariant> l : loopInvariants) {
-    		for (Invariant i : l) {
-    			System.out.println(new srt.ast.visitor.impl.PrinterVisitor().visit(i.getExpr()));
-    		}
-    	}
 
-    	System.out.println("candidateLoopInvariants");
-    	for (List<Invariant> l : candidateLoopInvariants) {
-    		for (Invariant i : l) {
-    			System.out.println(new srt.ast.visitor.impl.PrinterVisitor().visit(i.getExpr()));
-    		}
-    	}
-    	
     	// Set new id for next loop to be visited
     	int localId = id++;
 
@@ -69,7 +54,7 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     		stmts.add(new AssertStmt(invariant.getExpr(), "cand-" + localId + "-" + cand++ + "-pre"));	
     	}
         
-        //Extract nested loops
+        // Extract nested loops
         BlockStmt body = (BlockStmt) super.visit(whileStmt.getBody());
         
         inv = 0;
@@ -91,7 +76,6 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     	WhileStmt loopStmt = new WhileStmt(whileStmt.getCondition(), whileStmt.getBound(), new InvariantList(invariantsToAdd), loopBody);
 
         stmts.add(loopStmt);
-        //stmts.add(new AssumeStmt(new IntLiteral(0)));
 
         return new BlockStmt(stmts);
     }
@@ -140,7 +124,7 @@ public class HoudiniLoopExtractorVisitor extends DefaultVisitor {
     	return loopInvariants.isEmpty();
     }
     
-    //Should only be called after the visitor has finished.
+    // Should only be called after the visitor has finished.
     public int loopCount () {
     	return id;
     }

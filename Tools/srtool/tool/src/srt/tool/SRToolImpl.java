@@ -24,7 +24,6 @@ public class SRToolImpl implements SRTool {
 	}
 
 	public SRToolResult go() throws IOException, InterruptedException {
-		
 		if (clArgs.mode.equals(CLArgs.INVGEN)) {
 			ComponentExtractorVisitor componentExtractor = new ComponentExtractorVisitor();
 			componentExtractor.visit(program);
